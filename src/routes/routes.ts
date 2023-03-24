@@ -4,11 +4,18 @@ import * as auth from "../controlers/auth.controler.js"
 import * as search from "../controlers/search.controler.js"
 import * as user from "../controlers/user.controler.js"
 import { authMiddleware } from "../middlewares/middleware.js"
-
 import multer from "multer"
 
-const upload = multer({ dest: "uploads/" })
+const fileStorageConfig = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/uph")
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname)
+  },
+})
 
+const photoUpload = multer({ storage: fileStorageConfig })
 const router = express.Router()
 
 const searchRouter = express.Router()
@@ -27,10 +34,10 @@ const usersRouter = express.Router()
 usersRouter.get("/", search.getAllUsers)
 
 searchRouter.use("/airport", airportRouter)
-searchRouter.use("/users", authMiddleware, usersRouter)
+searchRouter.use("/users", authMiddleware(2), usersRouter)
 
 userRouter.use("/auth", authRouter)
-userRouter.post("/update", upload.single("avatar"), user.update)
+userRouter.post("/photoupdate", authMiddleware(4), photoUpload.single("photo"), user.update)
 
 router.use("/user", userRouter)
 router.use("/search", searchRouter)

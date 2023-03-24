@@ -1,19 +1,37 @@
 export const userEmailCheckQuery = (email: string) => ({
   name: "email-check",
-  text: "SELECT * FROM users WHERE usr_email = $1",
+  text: "SELECT usr_id, usr_password, usr_role FROM users WHERE usr_email=$1",
   values: [email],
 })
 
-export const userInsertQuery = (email: string, password: string, role: number) => ({
+export const userInsertQuery = (email: string, password: string, uniqueURL: string) => ({
   name: "insert-user",
-  text: "INSERT INTO users (usr_email, usr_password, usr_role) values ($1, $2, $3) RETURNING *",
-  values: [email, password, role],
+  text: "INSERT INTO users (usr_email, usr_password, usr_url) values ($1, $2) RETURNING *",
+  values: [email, password],
 })
+
+// export const userInsertPhotoQuery = (id: string, photourl: string) => ({
+//   name: "insert-user-photo",
+//   text: "UPDATE users SET usr_photourl=$2 WHERE usr_id=$1 RETURNING *",
+//   values: [id, photourl],
+// })
 
 export const userByIdQuery = (id: number) => ({
   name: "user-by-id",
-  text: "SELECT usr_id, usr_firstname, usr_lastname, usr_email, role_name, usr_photourl, usr_phone, co_name, cn_phonecode, cn_flag FROM users INNER JOIN roles ON usr_role=role_id INNER JOIN company ON usr_co=co_id INNER JOIN country ON co_iso_country=cn_iso WHERE usr_id=$1;",
+  text: "SELECT usr_id, usr_firstname, usr_lastname, usr_email, usr_url, role_name as usr_role_name, usr_co, usr_phone, usr_cn FROM users INNER JOIN roles ON usr_role=role_id WHERE usr_id=$1",
   values: [id],
+})
+
+export const companyByIdQuery = (id: number) => ({
+  name: "country-by-id",
+  text: "SELECT co_name, co_country_iso FROM company WHERE co_id=$1",
+  values: [id],
+})
+
+export const countryByISOQuery = (country_iso: string) => ({
+  name: "country-by-iso",
+  text: "SELECT cn_case_name, cn_phonecode, cn_flag FROM country WHERE cn_iso=$1",
+  values: [country_iso],
 })
 
 export const airportQuery = (search: string) => ({
@@ -23,7 +41,7 @@ export const airportQuery = (search: string) => ({
 })
 export const allUsersQuery = () => ({
   name: "all-users",
-  text: "SELECT * FROM users",
+  text: "SELECT usr_id, usr_firstname, usr_lastname, usr_email, usr_url, role_name as usr_role_name, usr_co, usr_phone, usr_cn FROM users INNER JOIN roles ON usr_role=role_id",
 })
 
 export const countryByIpv4Query = (ip: string) => ({

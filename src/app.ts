@@ -20,9 +20,6 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.static("uploads"))
-app.enable("trust proxy")
-app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"])
-
 app.use("/api", router)
 app.use(errorMiddleware)
 
@@ -30,4 +27,4 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello world!")
 })
 
-app.listen(port, () => console.log(`⚡️[server]: Server is running at http://localhost:${port}`))
+app.listen(port, () => console.log(`[server] running at http://localhost:${port}`))

@@ -3,12 +3,24 @@ export interface IUser {
   usr_firstname: string | undefined
   usr_lastname: string | undefined
   usr_email: string
-  role_name: string
-  usr_photourl: string | undefined
+  usr_url: string | undefined
+  usr_role_name: string
+  usr_co: number | undefined
   usr_phone: string | undefined
-  co_name: string | undefined
+  usr_cn: number | undefined
+}
+
+export interface ICompany {
+  co_name: string
+  co_country_iso: string
+  co_country_name: string
+  co_country_flag: string
+}
+
+export interface ICountry {
+  cn_case_name: string
   cn_phonecode: number
-  cn_flag: string | undefined
+  cn_flag: string
 }
 
 export interface ITokens {
@@ -16,14 +28,16 @@ export interface ITokens {
   refreshToken: string
 }
 
-export interface IUserResponse {
-  user: IUser
-  tokens: ITokens
+export interface IUserStateResponse {
+  user: IUser | undefined
+  company: ICompany | undefined
+  country: ICountry | undefined
+  tokens: ITokens | undefined
 }
 
-// export interface IUsersResponse {
-//   total_count: number
-//   airports: IUserResponse[]
+// export interface IAuthResponse {
+//   user: IUserResponse
+//   tokens: ITokens
 // }
 
 export interface IAirport {
@@ -46,4 +60,8 @@ export interface IAirport {
 export interface IAirportResponse {
   total_count: number
   airports: IAirport[]
+}
+export interface IError {
+  status?: number
+  data: string
 }
