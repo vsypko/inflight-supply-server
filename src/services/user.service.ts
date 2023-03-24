@@ -9,7 +9,6 @@ import {
 } from "../db/queries.js"
 import { generateTokens } from "./token.service.js"
 import { ICompany, ICountry, ITokens, IUser } from "../types.js"
-import { v4 as uuidv4 } from "uuid"
 
 //------------------------------------------------------------------------------------------------------------------------
 
@@ -26,8 +25,7 @@ export async function signup(
   const checkEmail = await db.query(userEmailCheckQuery(email))
   if (checkEmail.rowCount != 0) throw { status: 400, data: "Such user already exists" }
   const hashedPassword = await bcrypt.hash(password, 3)
-  const uniqueURL = uuidv4()
-  const newUser = await db.query(userInsertQuery(email, hashedPassword, uniqueURL))
+  const newUser = await db.query(userInsertQuery(email, hashedPassword))
   if (newUser.rowCount === 0) throw { status: 500, data: "Internal server error" }
   const { usr_id: id, usr_role: role } = newUser.rows[0]
   const tokens = generateTokens({ id, role })

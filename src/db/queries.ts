@@ -4,17 +4,23 @@ export const userEmailCheckQuery = (email: string) => ({
   values: [email],
 })
 
-export const userInsertQuery = (email: string, password: string, uniqueURL: string) => ({
+export const userInsertQuery = (email: string, password: string) => ({
   name: "insert-user",
-  text: "INSERT INTO users (usr_email, usr_password, usr_url) values ($1, $2) RETURNING *",
+  text: "INSERT INTO users (usr_email, usr_password) values ($1, $2) RETURNING *",
   values: [email, password],
 })
 
-// export const userInsertPhotoQuery = (id: string, photourl: string) => ({
-//   name: "insert-user-photo",
-//   text: "UPDATE users SET usr_photourl=$2 WHERE usr_id=$1 RETURNING *",
-//   values: [id, photourl],
-// })
+export const userInsertUrlQuery = (id: string, url: string) => ({
+  name: "insert-user-url",
+  text: "UPDATE users SET usr_url=$2 WHERE usr_id=$1",
+  values: [id, url],
+})
+
+export const userDeleteUrlQuery = (url: string) => ({
+  name: "delete-user-url",
+  text: "UPDATE users SET usr_url='' WHERE usr_url=$1",
+  values: [url],
+})
 
 export const userByIdQuery = (id: number) => ({
   name: "user-by-id",

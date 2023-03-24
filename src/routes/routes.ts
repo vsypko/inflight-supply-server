@@ -37,7 +37,8 @@ searchRouter.use("/airport", airportRouter)
 searchRouter.use("/users", authMiddleware(2), usersRouter)
 
 userRouter.use("/auth", authRouter)
-userRouter.post("/photoupdate", authMiddleware(4), photoUpload.single("photo"), user.update)
+userRouter.post("/urlupdate", authMiddleware(4), photoUpload.single("photo"), user.savePhoto)
+userRouter.delete("/urldelete/:url", authMiddleware(4), user.deleteUserUrl)
 
 router.use("/user", userRouter)
 router.use("/search", searchRouter)
