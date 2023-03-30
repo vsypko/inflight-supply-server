@@ -7,7 +7,7 @@ export interface IUser {
   usr_role_name: string
   usr_co: number | undefined
   usr_phone: string | undefined
-  usr_cn: number | undefined
+  usr_cn: string | undefined
 }
 
 export interface ICompany {
@@ -18,6 +18,7 @@ export interface ICompany {
 }
 
 export interface ICountry {
+  cn_iso: string
   cn_case_name: string
   cn_phonecode: number
   cn_flag: string

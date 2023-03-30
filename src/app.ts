@@ -13,16 +13,14 @@ const port = Number(process.env.PORT) || 3001
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL] as Array<string>,
+    origin: [process.env.CLIENT_URL, "http://192.168.31.50:5173"] as Array<string>,
     credentials: true,
   }),
 )
 app.use(express.json())
 app.use(cookieParser())
-app.use(express.static("uploads"))
 app.use("/api", router)
 app.use(errorMiddleware)
-
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello world!")
 })

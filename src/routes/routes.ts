@@ -33,12 +33,18 @@ authRouter.get("/signout", auth.signout)
 const usersRouter = express.Router()
 usersRouter.get("/", search.getAllUsers)
 
+const countriesRouter = express.Router()
+countriesRouter.get("/", search.getAllCountries)
+
 searchRouter.use("/airport", airportRouter)
 searchRouter.use("/users", authMiddleware(2), usersRouter)
+searchRouter.use("/countries", countriesRouter)
 
 userRouter.use("/auth", authRouter)
-userRouter.post("/urlupdate", authMiddleware(4), photoUpload.single("photo"), user.savePhoto)
-userRouter.delete("/urldelete/:url", authMiddleware(4), user.deleteUserUrl)
+userRouter.post("/updateurl", photoUpload.single("photo"), user.saveUserPhoto)
+userRouter.post("/updateprofile", user.updateUserProfile)
+userRouter.get("/geturl/:url", user.getUserPhoto)
+userRouter.delete("/deleteurl/:url", user.removeUserPhoto)
 
 router.use("/user", userRouter)
 router.use("/search", searchRouter)
