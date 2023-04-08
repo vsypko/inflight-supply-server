@@ -3,6 +3,7 @@ import { body } from "express-validator"
 import * as auth from "../controlers/auth.controler.js"
 import * as search from "../controlers/search.controler.js"
 import * as user from "../controlers/user.controler.js"
+import * as company from "../controlers/company.controler.js"
 import { authMiddleware } from "../middlewares/middleware.js"
 import multer from "multer"
 
@@ -36,6 +37,9 @@ usersRouter.get("/", search.getAllUsers)
 const countriesRouter = express.Router()
 countriesRouter.get("/", search.getAllCountries)
 
+const companyRouter = express.Router()
+companyRouter.post("/schedule", company.scheduleUpdate)
+
 searchRouter.use("/airport", airportRouter)
 searchRouter.use("/users", authMiddleware(2), usersRouter)
 searchRouter.use("/countries", countriesRouter)
@@ -46,7 +50,10 @@ userRouter.post("/updateprofile", user.updateUserProfile)
 userRouter.get("/geturl/:url", user.getUserPhoto)
 userRouter.delete("/deleteurl/:url", user.removeUserPhoto)
 
+companyRouter.use
+
 router.use("/user", userRouter)
 router.use("/search", searchRouter)
+router.use("/company", companyRouter)
 
 export default router

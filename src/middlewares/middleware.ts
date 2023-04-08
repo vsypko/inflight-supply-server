@@ -22,5 +22,13 @@ export function authMiddleware(role: number) {
 }
 
 export function errorMiddleware(err: any, req: Request, res: Response, next: NextFunction) {
-  res.status(err.status).json(err.data)
+  if (typeof err === "object" && err != null && "status" in err && "data" in err) {
+    res.status(err.status).json(err.data)
+    return
+  }
+  if (typeof err === "object" && err != null && "code" in err) {
+    res.status(400).json(`Bad request.\n Code: ${err.code}, ${err.toString()}`)
+    return
+  }
+  res.status(400).json(err)
 }

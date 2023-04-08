@@ -1,3 +1,4 @@
+import { ISchedule } from "../types.js"
 import db from "./db.js"
 
 export const airportQuery = (search: string) => ({
@@ -38,8 +39,12 @@ export const userByIdQuery = (id: number) => ({
 
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
-  text: "SELECT co_name, co_country_iso FROM company WHERE co_id=$1",
+  text: "SELECT co_name, co_category, co_iata_code, co_cn FROM company WHERE co_id=$1",
   values: [id],
+})
+export const companyInsertScheduleQuery = (schedule: string) => ({
+  name: "insert-schedule",
+  text: `INSERT INTO airline (fl_date, fl_num,fl_ac_iata,fl_ac_reg,fl_from,fl_to,fl_std,fl_sta,fl_ac_sts) VALUES ${schedule}`,
 })
 
 export const countryByISOQuery = (country_iso: string) => ({

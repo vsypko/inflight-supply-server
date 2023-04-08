@@ -78,13 +78,13 @@ export async function getUserData(
     const companyData = await db.query(companyByIdQuery(user.usr_co))
     if (companyData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
     company = companyData.rows[0]
-    if (company && company.co_country_iso) {
-      const countryData = await db.query(countryByISOQuery(company.co_country_iso))
+    if (company && company.co_cn) {
+      const countryData = await db.query(countryByISOQuery(company.co_cn))
       if (countryData.rowCount === 0) {
         company = undefined
       } else {
-        company.co_country_name = countryData.rows[0].cn_case_name
-        company.co_country_flag = countryData.rows[0].cn_flag
+        company.co_cn_name = countryData.rows[0].cn_case_name
+        company.co_cn_flag = countryData.rows[0].cn_flag
       }
     }
   }
