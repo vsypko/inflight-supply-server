@@ -11,6 +11,7 @@ export interface IUser {
 }
 
 export interface ICompany {
+  co_id: number
   co_name: string
   co_category: string
   co_iata_code: string
@@ -19,7 +20,8 @@ export interface ICompany {
   co_cn_flag: string
 }
 
-export interface ISchedule {
+export interface IFlight {
+  id: number
   date: string
   flight: number
   acType: string

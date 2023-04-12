@@ -38,7 +38,8 @@ const countriesRouter = express.Router()
 countriesRouter.get("/", search.getAllCountries)
 
 const companyRouter = express.Router()
-companyRouter.post("/schedule", company.scheduleUpdate)
+companyRouter.get("/flights", company.getFlights)
+companyRouter.post("/flights", company.flightsUpdate)
 
 searchRouter.use("/airport", airportRouter)
 searchRouter.use("/users", authMiddleware(2), usersRouter)

@@ -1,4 +1,4 @@
-import { ISchedule } from "../types.js"
+// import { ISchedule } from "../types.js"
 import db from "./db.js"
 
 export const airportQuery = (search: string) => ({
@@ -39,12 +39,24 @@ export const userByIdQuery = (id: number) => ({
 
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
-  text: "SELECT co_name, co_category, co_iata_code, co_cn FROM company WHERE co_id=$1",
+  text: "SELECT co_id, co_name, co_category, co_iata_code, co_cn FROM company WHERE co_id=$1",
   values: [id],
 })
-export const companyInsertScheduleQuery = (schedule: string) => ({
+
+export const getFlightsTableNameQuery = (id: number) => ({
+  name: "company-schedule-name",
+  text: "SELECT co_tb FROM company WHERE co_id=$1",
+  values: [id],
+})
+export const getFlightsQuery = (table: string, date: string) => ({
+  name: "schedule",
+  text: `SELECT fl_id as id, TO_CHAR(fl_date,'YYYY-MM-DD') as date, fl_num as flight, fl_ac_iata as "acType", fl_ac_reg as "acReg", fl_from as from, fl_to as to, to_char(fl_std,'HH24:MI') as std, to_char(fl_sta,'HH24:MI') as sta, fl_ac_sts as seats FROM ${table} WHERE fl_date=$1::date`,
+  values: [date],
+})
+
+export const companyInsertFlightsQuery = (table: string, flights: string) => ({
   name: "insert-schedule",
-  text: `INSERT INTO airline (fl_date, fl_num,fl_ac_iata,fl_ac_reg,fl_from,fl_to,fl_std,fl_sta,fl_ac_sts) VALUES ${schedule}`,
+  text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_sts) VALUES ${flights}`,
 })
 
 export const countryByISOQuery = (country_iso: string) => ({
