@@ -1,30 +1,73 @@
 import { Request, Response, NextFunction } from "express"
 import db from "../db/db.js"
-import { getFlightsTableNameQuery, getFlightsQuery, companyInsertFlightsQuery } from "../db/queries.js"
+import {
+  getFlightsTableNameQuery,
+  getFlightsQuery,
+  companyInsertFlightsQuery,
+  companyDeleteFlightQuery,
+} from "../db/queries.js"
+
+async function getTableFlights(id: number) {
+  const flightsTableName = await db.query(getFlightsTableNameQuery(id))
+  if (!flightsTableName) throw { status: 400, data: "No created flights" }
+  return flightsTableName.rows[0].co_tb
+}
 
 export async function getFlights(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
-    const flightsTableName = await db.query(getFlightsTableNameQuery(Number(req.query.id)))
-    if (!flightsTableName) throw { status: 400, data: "No created flights" }
-    const table = flightsTableName.rows[0].co_tb
+    const table = await getTableFlights(Number(req.query.id))
     const date = req.query.date!.toString()
     const result = await db.query(getFlightsQuery(table, date))
-    res.send(result.rows)
+    res.json(result.rows)
   } catch (e) {
     next(e)
   }
 }
 
-export async function flightsUpdate(req: Request, res: Response, next: NextFunction) {
+export async function updateFlights(req: Request, res: Response, next: NextFunction) {
   try {
     const flights = req.body.data.values
     if (!flights) throw { status: 400, data: "Bad request. File data failure." }
-    const flightsTableName = await db.query(getFlightsTableNameQuery(Number(req.body.data.id)))
-    if (!flightsTableName) throw { status: 400, data: "No created flights" }
-    const table = flightsTableName.rows[0].co_tb
+    const table = await getTableFlights(Number(req.body.data.id))
     const result = await db.query(companyInsertFlightsQuery(table, flights))
     res.json({ data: `Inserted ${result.rowCount} rows` })
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function addFlight(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const table = await getTableFlights(Number(req.query.co))
+    const flight = Number(req.query.fl)
+    const result = await db.query(companyDeleteFlightQuery(table, flight))
+    res.json({ data: "Flight have been deleted" })
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function updateFlight(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const table = await getTableFlights(Number(req.query.co))
+    const flight = Number(req.query.fl)
+    const result = await db.query(companyDeleteFlightQuery(table, flight))
+    res.json({ data: "Flight have been deleted" })
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function deleteFlight(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const table = await getTableFlights(Number(req.query.co))
+    const flight = Number(req.query.fl)
+    const result = await db.query(companyDeleteFlightQuery(table, flight))
+    res.json({ data: "Flight have been deleted" })
   } catch (e) {
     next(e)
   }

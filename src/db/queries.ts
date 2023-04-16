@@ -55,8 +55,14 @@ export const getFlightsQuery = (table: string, date: string) => ({
 })
 
 export const companyInsertFlightsQuery = (table: string, flights: string) => ({
-  name: "insert-schedule",
+  name: "insert-flights",
   text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_sts) VALUES ${flights}`,
+})
+
+export const companyDeleteFlightQuery = (table: string, flight: number) => ({
+  name: "delete-flight",
+  text: `DELETE FROM ${table} WHERE fl_id=$1`,
+  values: [flight],
 })
 
 export const countryByISOQuery = (country_iso: string) => ({

@@ -39,7 +39,8 @@ countriesRouter.get("/", search.getAllCountries)
 
 const companyRouter = express.Router()
 companyRouter.get("/flights", company.getFlights)
-companyRouter.post("/flights", company.flightsUpdate)
+companyRouter.post("/flights", company.updateFlights)
+companyRouter.delete("/flight", company.deleteFlight)
 
 searchRouter.use("/airport", airportRouter)
 searchRouter.use("/users", authMiddleware(2), usersRouter)
