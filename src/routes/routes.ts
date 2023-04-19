@@ -40,6 +40,7 @@ countriesRouter.get("/", search.getAllCountries)
 const companyRouter = express.Router()
 companyRouter.get("/flights", company.getFlights)
 companyRouter.post("/flights", company.updateFlights)
+companyRouter.patch("/flight/:id", company.updateFlight)
 companyRouter.delete("/flight", company.deleteFlight)
 
 searchRouter.use("/airport", airportRouter)

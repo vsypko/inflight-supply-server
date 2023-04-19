@@ -1,4 +1,5 @@
 // import { ISchedule } from "../types.js"
+import { IFlight } from "../types.js"
 import db from "./db.js"
 
 export const airportQuery = (search: string) => ({
@@ -57,6 +58,23 @@ export const getFlightsQuery = (table: string, date: string) => ({
 export const companyInsertFlightsQuery = (table: string, flights: string) => ({
   name: "insert-flights",
   text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_sts) VALUES ${flights}`,
+})
+
+export const companyUpdateFlightQuery = (table: string, flight: IFlight) => ({
+  name: "update-flight",
+  text: `UPDATE ${table} SET fl_date=$1::date, fl_num=$2, fl_ac_iata=$3, fl_ac_reg=$4, fl_from=$5, fl_to=$6, fl_std=$7, fl_sta=$8, fl_ac_sts=$9 WHERE fl_id=$10`,
+  values: [
+    flight.date,
+    flight.flight,
+    flight.acType,
+    flight.acReg,
+    flight.from,
+    flight.to,
+    flight.std,
+    flight.std,
+    flight.seats,
+    flight.id,
+  ],
 })
 
 export const companyDeleteFlightQuery = (table: string, flight: number) => ({

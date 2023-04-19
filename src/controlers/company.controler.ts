@@ -5,6 +5,7 @@ import {
   getFlightsQuery,
   companyInsertFlightsQuery,
   companyDeleteFlightQuery,
+  companyUpdateFlightQuery,
 } from "../db/queries.js"
 
 async function getTableFlights(id: number) {
@@ -27,9 +28,9 @@ export async function getFlights(req: Request, res: Response, next: NextFunction
 
 export async function updateFlights(req: Request, res: Response, next: NextFunction) {
   try {
-    const flights = req.body.data.values
+    const flights = req.body.values
     if (!flights) throw { status: 400, data: "Bad request. File data failure." }
-    const table = await getTableFlights(Number(req.body.data.id))
+    const table = await getTableFlights(Number(req.body.id))
     const result = await db.query(companyInsertFlightsQuery(table, flights))
     res.json({ data: `Inserted ${result.rowCount} rows` })
   } catch (e) {
@@ -42,8 +43,8 @@ export async function addFlight(req: Request, res: Response, next: NextFunction)
     if (!req.query) throw { status: 400, data: "Bad request" }
     const table = await getTableFlights(Number(req.query.co))
     const flight = Number(req.query.fl)
-    const result = await db.query(companyDeleteFlightQuery(table, flight))
-    res.json({ data: "Flight have been deleted" })
+    await db.query(companyDeleteFlightQuery(table, flight))
+    res.json({ data: "Flight has been added" })
   } catch (e) {
     next(e)
   }
@@ -52,10 +53,10 @@ export async function addFlight(req: Request, res: Response, next: NextFunction)
 export async function updateFlight(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFlights(Number(req.query.co))
-    const flight = Number(req.query.fl)
-    const result = await db.query(companyDeleteFlightQuery(table, flight))
-    res.json({ data: "Flight have been deleted" })
+    const table = await getTableFlights(Number(req.body.co))
+    const flight = req.body.flight
+    await db.query(companyUpdateFlightQuery(table, flight))
+    res.json({ data: "Flight has been updated" })
   } catch (e) {
     next(e)
   }
@@ -66,8 +67,8 @@ export async function deleteFlight(req: Request, res: Response, next: NextFuncti
     if (!req.query) throw { status: 400, data: "Bad request" }
     const table = await getTableFlights(Number(req.query.co))
     const flight = Number(req.query.fl)
-    const result = await db.query(companyDeleteFlightQuery(table, flight))
-    res.json({ data: "Flight have been deleted" })
+    await db.query(companyDeleteFlightQuery(table, flight))
+    res.json({ data: "Flight has been deleted" })
   } catch (e) {
     next(e)
   }
