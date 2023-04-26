@@ -44,13 +44,24 @@ export const companyByIdQuery = (id: number) => ({
   values: [id],
 })
 
+export const getFleetTableNameQuery = (id: number) => ({
+  name: "company-fleet-name",
+  text: "SELECT co_tb2 FROM company WHERE co_id=$1",
+  values: [id],
+})
+
+export const getFleetQuery = (table: string) => ({
+  name: "fleet",
+  text: `SELECT * FROM ${table}`,
+})
+
 export const getFlightsTableNameQuery = (id: number) => ({
   name: "company-schedule-name",
   text: "SELECT co_tb FROM company WHERE co_id=$1",
   values: [id],
 })
 export const getFlightsQuery = (table: string, date: string) => ({
-  name: "schedule",
+  name: "flights",
   text: `SELECT fl_id as id, TO_CHAR(fl_date,'YYYY-MM-DD') as date, fl_num as flight, fl_ac_iata as "acType", fl_ac_reg as "acReg", fl_from as from, fl_to as to, to_char(fl_std,'HH24:MI') as std, to_char(fl_sta,'HH24:MI') as sta, fl_ac_sts as seats FROM ${table} WHERE fl_date=$1::date ORDER BY fl_from ASC, fl_std ASC`,
   values: [date],
 })

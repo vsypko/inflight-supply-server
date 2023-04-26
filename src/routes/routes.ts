@@ -38,6 +38,7 @@ const countriesRouter = express.Router()
 countriesRouter.get("/", search.getAllCountries)
 
 const companyRouter = express.Router()
+companyRouter.get("/fleet", company.getFleet)
 companyRouter.get("/flights", company.getFlights)
 companyRouter.post("/flights", company.updateFlights)
 companyRouter.patch("/flight/:id", company.updateFlight)

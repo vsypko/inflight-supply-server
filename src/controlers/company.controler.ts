@@ -6,7 +6,26 @@ import {
   companyInsertFlightsQuery,
   companyDeleteFlightQuery,
   companyUpdateFlightQuery,
+  getFleetTableNameQuery,
+  getFleetQuery,
 } from "../db/queries.js"
+
+async function getTableFleet(id: number) {
+  const fleetTableName = await db.query(getFleetTableNameQuery(id))
+  if (!fleetTableName) throw { status: 400, data: "No created fleet" }
+  return fleetTableName.rows[0].co_tb2
+}
+
+export async function getFleet(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const table = await getTableFleet(Number(req.query.id))
+    const result = await db.query(getFleetQuery(table))
+    res.json(result.rows)
+  } catch (e) {
+    next(e)
+  }
+}
 
 async function getTableFlights(id: number) {
   const flightsTableName = await db.query(getFlightsTableNameQuery(id))
