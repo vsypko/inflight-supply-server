@@ -28,7 +28,7 @@ export async function signup(
   const hashedPassword = await bcrypt.hash(password, 3)
   const newUser = await db.query(userInsertQuery(email, hashedPassword))
   if (newUser.rowCount === 0) throw { status: 500, data: "Internal server error" }
-  const { usr_id: id, usr_role: role } = newUser.rows[0]
+  const { id: id, usr_role: role } = newUser.rows[0]
   const tokens = generateTokens({ id, role })
   const { user, company, country } = await getUserData(id, ip)
   return {
@@ -46,7 +46,7 @@ export async function signin(email: string, password: string, ip: string) {
   if (checkUser.rowCount === 0) throw { status: 400, data: "Such user not found!\n Please sign up" }
   const checkPassword = await bcrypt.compare(password, checkUser.rows[0].usr_password)
   if (!checkPassword) throw { status: 400, data: "Incorrect password" }
-  const { usr_id: id, usr_role: role } = checkUser.rows[0]
+  const { id: id, usr_role: role } = checkUser.rows[0]
   const tokens = generateTokens({ id, role })
   const { user, company, country } = await getUserData(id, ip)
   return {

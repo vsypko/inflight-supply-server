@@ -1,5 +1,5 @@
 export interface IUser {
-  usr_id: number
+  id: number
   usr_firstname: string | undefined
   usr_lastname: string | undefined
   usr_email: string
@@ -11,11 +11,13 @@ export interface IUser {
 }
 
 export interface ICompany {
-  co_id: number
+  id: number
   co_name: string
   co_category: string
   co_iata_code: string
   co_cn: string
+  co_tb_1: string
+  co_tb_2: string
   co_cn_name: string
   co_cn_flag: string
 }

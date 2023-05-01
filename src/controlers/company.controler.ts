@@ -1,93 +1,104 @@
 import { Request, Response, NextFunction } from "express"
 import db from "../db/db.js"
 import {
-  getFlightsTableNameQuery,
-  getFlightsQuery,
-  companyInsertFlightsQuery,
-  companyDeleteFlightQuery,
-  companyUpdateFlightQuery,
-  getFleetTableNameQuery,
-  getFleetQuery,
+  getDataFlightsQuery,
+  insertFlightsQuery,
+  deleteDataQuery,
+  updateFlightQuery,
+  getDataQuery,
+  getDataFleetQuery,
+  insertFleetQuery,
 } from "../db/queries.js"
+import { QueryResult } from "pg"
 
-async function getTableFleet(id: number) {
-  const fleetTableName = await db.query(getFleetTableNameQuery(id))
-  if (!fleetTableName) throw { status: 400, data: "No created fleet" }
-  return fleetTableName.rows[0].co_tb2
-}
-
-export async function getFleet(req: Request, res: Response, next: NextFunction) {
+export async function getData(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFleet(Number(req.query.id))
-    const result = await db.query(getFleetQuery(table))
+    if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
+    if (req.params.tb_type === "flights") {
+      const table = req.query.tb!.toString()
+      const date = req.query.date!.toString()
+      const result = await db.query(getDataFlightsQuery(table, date))
+      res.json(result.rows)
+      return
+    }
+    if (req.params.tb_type === "fleet") {
+      const table = req.query.tb!.toString()
+      const result = await db.query(getDataFleetQuery(table))
+      res.json(result.rows)
+      return
+    }
+    const table = req.query.tb!.toString()
+    const result = await db.query(getDataQuery(table))
     res.json(result.rows)
   } catch (e) {
     next(e)
   }
 }
 
-async function getTableFlights(id: number) {
-  const flightsTableName = await db.query(getFlightsTableNameQuery(id))
-  if (!flightsTableName) throw { status: 400, data: "No created flights" }
-  return flightsTableName.rows[0].co_tb
-}
-
-export async function getFlights(req: Request, res: Response, next: NextFunction) {
+export async function insertData(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFlights(Number(req.query.id))
-    const date = req.query.date!.toString()
-    const result = await db.query(getFlightsQuery(table, date))
-    res.json(result.rows)
+    if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
+
+    const table = req.body.tb!.toString()
+    const data = req.body.values
+    if (!data) throw { status: 400, data: "Bad request. File data failure." }
+    let result: QueryResult<any>
+    if (req.params.tb_type === "flights") {
+      result = await db.query(insertFlightsQuery(table, data))
+      res.json({ data: `Inserted ${result.rowCount} rows` })
+      return
+    }
+    if (req.params.tb_type === "fleet") {
+      result = await db.query(insertFleetQuery(table, data))
+      res.json({ data: `Inserted ${result.rowCount} rows` })
+      return
+    }
+
+    res.json({ data: "No data found" })
   } catch (e) {
     next(e)
   }
 }
 
-export async function updateFlights(req: Request, res: Response, next: NextFunction) {
+// export async function addFlight(req: Request, res: Response, next: NextFunction) {
+//   try {
+//     if (!req.query) throw { status: 400, data: "Bad request" }
+//     const table = await getTableFlights(Number(req.query.co))
+//     const flight = parseInt(req.query.fl , 10)
+//     await db.query(companyDeleteFlightQuery(table, flight))
+//     res.json({ data: "Flight has been added" })
+//   } catch (e) {
+//     next(e)
+//   }
+// }
+
+export async function updateData(req: Request, res: Response, next: NextFunction) {
+  if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
   try {
-    const flights = req.body.values
-    if (!flights) throw { status: 400, data: "Bad request. File data failure." }
-    const table = await getTableFlights(Number(req.body.id))
-    const result = await db.query(companyInsertFlightsQuery(table, flights))
-    res.json({ data: `Inserted ${result.rowCount} rows` })
+    if (req.params.tb_type === "flight") {
+      const table = req.body.tb!.toString()
+      const flight = req.body.value
+      await db.query(updateFlightQuery(table, flight))
+      res.json({ data: "Flight has been updated" })
+      return
+    }
+    res.json({ data: "No data found" })
   } catch (e) {
     next(e)
   }
 }
 
-export async function addFlight(req: Request, res: Response, next: NextFunction) {
+export async function deleteData(req: Request, res: Response, next: NextFunction) {
+  if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
   try {
-    if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFlights(Number(req.query.co))
-    const flight = Number(req.query.fl)
-    await db.query(companyDeleteFlightQuery(table, flight))
-    res.json({ data: "Flight has been added" })
-  } catch (e) {
-    next(e)
-  }
-}
-
-export async function updateFlight(req: Request, res: Response, next: NextFunction) {
-  try {
-    if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFlights(Number(req.body.co))
-    const flight = req.body.flight
-    await db.query(companyUpdateFlightQuery(table, flight))
-    res.json({ data: "Flight has been updated" })
-  } catch (e) {
-    next(e)
-  }
-}
-
-export async function deleteFlight(req: Request, res: Response, next: NextFunction) {
-  try {
-    if (!req.query) throw { status: 400, data: "Bad request" }
-    const table = await getTableFlights(Number(req.query.co))
-    const flight = Number(req.query.fl)
-    await db.query(companyDeleteFlightQuery(table, flight))
-    res.json({ data: "Flight has been deleted" })
+    if (req.params.tb_type === "flight") {
+      const table = req.query.tb!.toString()
+      const id = Number(req.query.id)
+      await db.query(deleteDataQuery(table, id))
+      res.json({ data: "Flight has been deleted" })
+      return
+    }
+    res.json({ data: "No data found" })
   } catch (e) {
     next(e)
   }
