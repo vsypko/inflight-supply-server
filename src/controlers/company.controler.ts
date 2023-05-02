@@ -8,6 +8,7 @@ import {
   getDataQuery,
   getDataFleetQuery,
   insertFleetQuery,
+  updateFleetQuery,
 } from "../db/queries.js"
 import { QueryResult } from "pg"
 
@@ -75,11 +76,16 @@ export async function insertData(req: Request, res: Response, next: NextFunction
 export async function updateData(req: Request, res: Response, next: NextFunction) {
   if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
   try {
+    const table = req.body.tb!.toString()
+    const data = req.body.value
     if (req.params.tb_type === "flight") {
-      const table = req.body.tb!.toString()
-      const flight = req.body.value
-      await db.query(updateFlightQuery(table, flight))
+      await db.query(updateFlightQuery(table, data))
       res.json({ data: "Flight has been updated" })
+      return
+    }
+    if (req.params.tb_type === "fleet") {
+      await db.query(updateFleetQuery(table, data))
+      res.json({ data: "Aircraft has been updated" })
       return
     }
     res.json({ data: "No data found" })
@@ -91,14 +97,10 @@ export async function updateData(req: Request, res: Response, next: NextFunction
 export async function deleteData(req: Request, res: Response, next: NextFunction) {
   if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
   try {
-    if (req.params.tb_type === "flight") {
-      const table = req.query.tb!.toString()
-      const id = Number(req.query.id)
-      await db.query(deleteDataQuery(table, id))
-      res.json({ data: "Flight has been deleted" })
-      return
-    }
-    res.json({ data: "No data found" })
+    const table = req.query.tb!.toString()
+    const id = Number(req.query.id)
+    await db.query(deleteDataQuery(table, id))
+    res.json({ data: "Data row has been deleted" })
   } catch (e) {
     next(e)
   }
