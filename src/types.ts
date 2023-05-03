@@ -35,6 +35,14 @@ export interface IFlight {
   seats: number
 }
 
+export interface IFleet {
+  id: number
+  name: string
+  acType: string
+  acReg: string
+  seats: number
+}
+
 export interface ICountry {
   cn_iso: string
   cn_case_name: string

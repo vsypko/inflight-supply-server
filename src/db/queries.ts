@@ -1,5 +1,5 @@
 // import { ISchedule } from "../types.js"
-import { IFlight } from "../types.js"
+import { IFlight, IFleet } from "../types.js"
 import db from "./db.js"
 
 export const airportQuery = (search: string) => ({
@@ -70,10 +70,10 @@ export const insertFlightsQuery = (table: string, flights: string) => ({
   text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_seats) VALUES ${flights}`,
 })
 
-export const updateFleetQuery = (table: string, flight: IFlight) => ({
+export const updateFleetQuery = (table: string, fleet: IFleet) => ({
   name: "update-fleet",
   text: `UPDATE ${table} SET ac_name=$2, ac_type=$3, ac_reg=$4, ac_seats=$5 WHERE id=$1`,
-  values: Object.values(flight),
+  values: Object.values(fleet),
 })
 
 export const updateFlightQuery = (table: string, flight: IFlight) => ({

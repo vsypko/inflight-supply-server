@@ -61,18 +61,6 @@ export async function insertData(req: Request, res: Response, next: NextFunction
   }
 }
 
-// export async function addFlight(req: Request, res: Response, next: NextFunction) {
-//   try {
-//     if (!req.query) throw { status: 400, data: "Bad request" }
-//     const table = await getTableFlights(Number(req.query.co))
-//     const flight = parseInt(req.query.fl , 10)
-//     await db.query(companyDeleteFlightQuery(table, flight))
-//     res.json({ data: "Flight has been added" })
-//   } catch (e) {
-//     next(e)
-//   }
-// }
-
 export async function updateData(req: Request, res: Response, next: NextFunction) {
   if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
   try {
