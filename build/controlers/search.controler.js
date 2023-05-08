@@ -1,5 +1,5 @@
 import db from "../db/db.js";
-import { airportQuery, allUsersQuery } from "../db/queries.js";
+import { airportQuery, allCountriesQuery, allUsersQuery } from "../db/queries.js";
 export async function getAirport(req, res, next) {
     try {
         const airports = await db.query(airportQuery(`${req.query.q}:*`));
@@ -15,6 +15,16 @@ export async function getAllUsers(req, res, next) {
         const users = await db.query(allUsersQuery());
         if (users)
             res.send({ total_count: users.rowCount, users: users.rows });
+    }
+    catch (e) {
+        next(e);
+    }
+}
+export async function getAllCountries(req, res, next) {
+    try {
+        const countries = await db.query(allCountriesQuery());
+        if (countries)
+            res.json(countries.rows);
     }
     catch (e) {
         next(e);

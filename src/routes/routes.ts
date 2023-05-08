@@ -48,10 +48,10 @@ searchRouter.use("/users", authMiddleware(2), usersRouter)
 searchRouter.use("/countries", countriesRouter)
 
 userRouter.use("/auth", authRouter)
-userRouter.post("/updateurl", photoUpload.single("photo"), user.saveUserPhoto)
-userRouter.post("/updateprofile", user.updateUserProfile)
+userRouter.post("/updateurl", photoUpload.single("image"), user.saveUserPhoto)
 userRouter.get("/geturl/:url", user.getUserPhoto)
 userRouter.delete("/deleteurl/:url", user.removeUserPhoto)
+userRouter.post("/updateprofile", user.updateUserProfile)
 
 companyRouter.use
 

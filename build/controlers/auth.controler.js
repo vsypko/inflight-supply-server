@@ -1,8 +1,8 @@
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
+import { countryByIpQuery } from "../db/queries.js";
 import { generateTokens } from "../services/token.service.js";
 import * as userService from "../services/user.service.js";
-import { countryByIp } from "../services/ip.service.js";
 export async function signup(req, res, next) {
     try {
         const err = validationResult(req);
@@ -11,8 +11,8 @@ export async function signup(req, res, next) {
         }
         const { email, password } = req.body;
         const ip = req.ip;
-        const country_iso = await countryByIp(ip);
-        const { user, company, country, tokens } = await userService.signup(email, password, country_iso);
+        const country_iso = await countryByIpQuery(ip);
+        const { user, company, country, tokens } = await userService.signup(email, password, ip);
         res.cookie("rf_tkn", tokens === null || tokens === void 0 ? void 0 : tokens.refreshToken, {
             maxAge: 2592000000,
             httpOnly: true,
@@ -20,7 +20,6 @@ export async function signup(req, res, next) {
             secure: true,
         });
         res.json({ user, company, country, token: tokens === null || tokens === void 0 ? void 0 : tokens.accessToken });
-        next();
     }
     catch (e) {
         next(e);
@@ -30,21 +29,20 @@ export async function signin(req, res, next) {
     try {
         const { email, password } = req.body;
         const ip = req.ip;
-        const country_iso = await countryByIp("93.72.42.167");
         if (email && password) {
             const err = validationResult(req);
             if (!err.isEmpty()) {
                 throw { status: 400, data: "Validation Error: Invalid email or password" };
             }
-            const { user, company, country, tokens } = await userService.signin(email, password, country_iso);
+            const { user, company, country, tokens } = await userService.signin(email, password, ip);
             res.cookie("rf_tkn", tokens === null || tokens === void 0 ? void 0 : tokens.refreshToken, {
                 maxAge: 2592000000,
                 httpOnly: true,
                 sameSite: "none",
                 secure: true,
             });
-            res.json({ user, company, country, token: tokens === null || tokens === void 0 ? void 0 : tokens.accessToken });
-            next();
+            res.json({ user, company, country, token: tokens.accessToken });
+            return;
         }
         const { rf_tkn: updateToken } = req.cookies;
         if (!updateToken)
@@ -59,9 +57,8 @@ export async function signin(req, res, next) {
             sameSite: "none",
             secure: true,
         });
-        const { user, company, country } = await userService.getUserState(tokenData.id, country_iso);
+        const { user, company, country } = await userService.getUserData(tokenData.id, ip);
         res.json({ user, company, country, token: tokens.accessToken });
-        next();
     }
     catch (e) {
         next(e);
@@ -83,7 +80,6 @@ export function tokenUpdate(req, res, next) {
             secure: true,
         });
         res.json(tokens.accessToken);
-        next();
     }
     catch (e) {
         next(e);
@@ -92,7 +88,7 @@ export function tokenUpdate(req, res, next) {
 export function signout(req, res, next) {
     try {
         res.clearCookie("rf_tkn");
-        next();
+        res.end();
     }
     catch (e) {
         next(e);

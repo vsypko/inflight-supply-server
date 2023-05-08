@@ -20,7 +20,13 @@ export const userInsertQuery = (email: string, password: string) => ({
   values: [email, password],
 })
 
-export const userInsertUrlQuery = (id: string, url: string) => ({
+export const userGetUrlQuery = (id: number) => ({
+  name: "get-user-url",
+  text: "SELECT usr_url FROM users WHERE id=$1",
+  values: [id],
+})
+
+export const userInsertUrlQuery = (id: number, url: string) => ({
   name: "insert-user-url",
   text: "UPDATE users SET usr_url=$2 WHERE id=$1",
   values: [id, url],
@@ -60,6 +66,11 @@ export const getDataFlightsQuery = (table: string, date: string) => ({
   values: [date],
 })
 
+export const getDataItemsQuery = (table: string) => ({
+  name: "items",
+  text: `SELECT id, su_code as code, su_name as name, su_category as category, su_area as area, su_description as description, su_img_url as img_url FROM ${table} ORDER BY code, category ASC`,
+})
+
 export const insertFleetQuery = (table: string, fleet: string) => ({
   name: "insert-fleet",
   text: `INSERT INTO ${table} (ac_name, ac_type, ac_reg, ac_seats) VALUES ${fleet}`,
@@ -68,6 +79,11 @@ export const insertFleetQuery = (table: string, fleet: string) => ({
 export const insertFlightsQuery = (table: string, flights: string) => ({
   name: "insert-flights",
   text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_seats) VALUES ${flights}`,
+})
+
+export const insertSupplyQuery = (table: string, items: string) => ({
+  name: "insert-items",
+  text: `INSERT INTO ${table} (su_code, su_name, su_category, su_area, su_description) VALUES ${items}`,
 })
 
 export const updateFleetQuery = (table: string, fleet: IFleet) => ({

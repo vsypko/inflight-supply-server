@@ -21,6 +21,14 @@ export function authMiddleware(role) {
     };
 }
 export function errorMiddleware(err, req, res, next) {
-    res.status(err.status).json(err.data);
+    if (typeof err === "object" && err != null && "status" in err && "data" in err) {
+        res.status(err.status).json(err.data);
+        return;
+    }
+    if (typeof err === "object" && err != null && "code" in err) {
+        res.status(400).json(`Bad request.\n Code: ${err.code}, ${err.toString()}`);
+        return;
+    }
+    res.status(400).json(err);
 }
 //# sourceMappingURL=middleware.js.map

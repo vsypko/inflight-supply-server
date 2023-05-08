@@ -9,6 +9,8 @@ import {
   getDataFleetQuery,
   insertFleetQuery,
   updateFleetQuery,
+  insertSupplyQuery,
+  getDataItemsQuery,
 } from "../db/queries.js"
 import { QueryResult } from "pg"
 
@@ -25,6 +27,12 @@ export async function getData(req: Request, res: Response, next: NextFunction) {
     if (req.params.tb_type === "fleet") {
       const table = req.query.tb!.toString()
       const result = await db.query(getDataFleetQuery(table))
+      res.json(result.rows)
+      return
+    }
+    if (req.params.tb_type === "supplies") {
+      const table = req.query.tb!.toString()
+      const result = await db.query(getDataItemsQuery(table))
       res.json(result.rows)
       return
     }
@@ -51,6 +59,11 @@ export async function insertData(req: Request, res: Response, next: NextFunction
     }
     if (req.params.tb_type === "fleet") {
       result = await db.query(insertFleetQuery(table, data))
+      res.json({ data: `Inserted ${result.rowCount} rows` })
+      return
+    }
+    if (req.params.tb_type === "supplies") {
+      result = await db.query(insertSupplyQuery(table, data))
       res.json({ data: `Inserted ${result.rowCount} rows` })
       return
     }

@@ -6,22 +6,9 @@ import {
   userUpdateProfileQuery,
   countryByISOQuery,
   countryByIpQuery,
+  userGetUrlQuery,
 } from "../db/queries.js"
 import * as fs from "fs"
-
-export async function saveUserPhoto(req: Request, res: Response, next: NextFunction) {
-  try {
-    const file = req.file
-    if (!file) throw { status: 400, data: "Bad request. File upload failure." }
-    const id = req.body.id
-    const newUrl = req.body.newUrl
-    if (!id || !newUrl) throw { status: 400, data: "Bad request. User data failure." }
-    if (newUrl) await db.query(userInsertUrlQuery(id, file.originalname))
-    res.json({ data: "Image uploaded" })
-  } catch (e) {
-    next(e)
-  }
-}
 
 export async function getUserPhoto(req: Request, res: Response, next: NextFunction) {
   try {
@@ -30,6 +17,26 @@ export async function getUserPhoto(req: Request, res: Response, next: NextFuncti
     res.setHeader("Content-Type", "image/png")
     res.setHeader("Content-Encoding", "binary")
     res.send(image)
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function saveUserPhoto(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.body.id
+    if (!id) throw { status: 400, data: "Bad request. User data failure." }
+
+    //get old image file url and delete it ----------------------------------------------------------
+    const url = await db.query(userGetUrlQuery(id))
+    const oldUrl = url.rows[0].usr_url
+    if (oldUrl) fs.unlinkSync(`uploads/uph/${oldUrl}`)
+
+    //save file with new file name --------------------------------------------------------------------
+    const file = req.file
+    if (!file) throw { status: 400, data: "Bad request. File upload failure." }
+    await db.query(userInsertUrlQuery(id, file.originalname))
+    res.json({ data: "Image uploaded" })
   } catch (e) {
     next(e)
   }
