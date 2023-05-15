@@ -34,5 +34,5 @@ export function errorMiddleware(err: any, req: Request, res: Response, next: Nex
     res.status(400).json(`Bad request.\n Code: ${err.code}, ${err.toString()}`)
     return
   }
-  res.status(400).json(err)
+  res.status(400).json("Something went wrong!")
 }

@@ -1,5 +1,3 @@
-// import { ISchedule } from "../types.js"
-import { IFlight, IFleet } from "../types.js"
 import db from "./db.js"
 
 export const airportQuery = (search: string) => ({
@@ -47,60 +45,6 @@ export const userByIdQuery = (id: number) => ({
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
   text: "SELECT id, co_name, co_category, co_iata_code, co_cn, co_tb_1, co_tb_2 FROM company WHERE id=$1",
-  values: [id],
-})
-
-export const getDataQuery = (table: string) => ({
-  name: "table",
-  text: `SELECT * FROM ${table}`,
-})
-
-export const getDataFleetQuery = (table: string) => ({
-  name: "table",
-  text: `SELECT id, ac_name as "name", ac_type as "acType", ac_reg as "acReg", ac_seats as "seats" FROM ${table}`,
-})
-
-export const getDataFlightsQuery = (table: string, date: string) => ({
-  name: "flights",
-  text: `SELECT id, TO_CHAR(fl_date,'YYYY-MM-DD') as date, fl_num as flight, fl_ac_iata as "acType", fl_ac_reg as "acReg", fl_from as from, fl_to as to, to_char(fl_std,'HH24:MI') as std, to_char(fl_sta,'HH24:MI') as sta, fl_ac_seats as seats FROM ${table} WHERE fl_date=$1::date ORDER BY fl_from ASC, fl_std ASC`,
-  values: [date],
-})
-
-export const getDataItemsQuery = (table: string) => ({
-  name: "items",
-  text: `SELECT id, su_code as code, su_name as name, su_category as category, su_area as area, su_description as description, su_img_url as img_url FROM ${table} ORDER BY code, category ASC`,
-})
-
-export const insertFleetQuery = (table: string, fleet: string) => ({
-  name: "insert-fleet",
-  text: `INSERT INTO ${table} (ac_name, ac_type, ac_reg, ac_seats) VALUES ${fleet}`,
-})
-
-export const insertFlightsQuery = (table: string, flights: string) => ({
-  name: "insert-flights",
-  text: `INSERT INTO ${table} (fl_date, fl_num, fl_ac_iata, fl_ac_reg, fl_from, fl_to, fl_std, fl_sta, fl_ac_seats) VALUES ${flights}`,
-})
-
-export const insertSupplyQuery = (table: string, items: string) => ({
-  name: "insert-items",
-  text: `INSERT INTO ${table} (su_code, su_name, su_category, su_area, su_description) VALUES ${items}`,
-})
-
-export const updateFleetQuery = (table: string, fleet: IFleet) => ({
-  name: "update-fleet",
-  text: `UPDATE ${table} SET ac_name=$2, ac_type=$3, ac_reg=$4, ac_seats=$5 WHERE id=$1`,
-  values: Object.values(fleet),
-})
-
-export const updateFlightQuery = (table: string, flight: IFlight) => ({
-  name: "update-flight",
-  text: `UPDATE ${table} SET fl_date=$2::date, fl_num=$3, fl_ac_iata=$4, fl_ac_reg=$5, fl_from=$6, fl_to=$7, fl_std=$8, fl_sta=$9, fl_ac_seats=$10 WHERE id=$1`,
-  values: Object.values(flight),
-})
-
-export const deleteDataQuery = (table: string, id: number) => ({
-  name: "delete-data",
-  text: `DELETE FROM ${table} WHERE id=$1`,
   values: [id],
 })
 
