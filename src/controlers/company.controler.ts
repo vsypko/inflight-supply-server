@@ -88,6 +88,12 @@ export async function updateData(req: Request, res: Response, next: NextFunction
       return
     }
     if (req.params.tb_type === "supplies") {
+      //get old image file url if exists and delete it ----------------------------------------------------------
+      if (data.id) {
+        const url = await db.query(`SELECT img_url FROM ${table} WHERE id=$1`, [data.id])
+        const oldUrl = url.rows[0].img_url
+        if (oldUrl) fs.unlinkSync(`uploads/itm/${oldUrl}`)
+      }
       await db.query(
         `UPDATE ${table} SET code=$2, title=$3, category=$4, area=$5, description=$6, img_url=$7 WHERE id=$1`,
         [...Object.values(data)],
@@ -131,15 +137,6 @@ export async function updateImg(req: Request, res: Response, next: NextFunction)
     const id = req.body.id
     const table = req.body.tb!.toString()
     if (!table) throw { status: 400, data: "Bad request. Item data failure." }
-
-    //get old image file url if exists and delete it ----------------------------------------------------------
-    if (id) {
-      console.log(id)
-
-      const url = await db.query(`SELECT img_url FROM ${table} WHERE id=$1`, [id])
-      const oldUrl = url.rows[0].img_url
-      if (oldUrl) fs.unlinkSync(`uploads/itm/${oldUrl}`)
-    }
 
     //save file with new file name --------------------------------------------------------------------
     const file = req.file
