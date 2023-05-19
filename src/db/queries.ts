@@ -50,7 +50,7 @@ export const companyByIdQuery = (id: number) => ({
 
 export const countryByISOQuery = (country_iso: string) => ({
   name: "country-by-iso",
-  text: "SELECT cn_iso, cn_case_name, cn_phonecode, cn_flag FROM country WHERE cn_iso=$1",
+  text: "SELECT iso, title_case, phonecode, currency, flag FROM countries WHERE iso=$1",
   values: [country_iso],
 })
 
@@ -107,5 +107,5 @@ export const allUsersQuery = () => ({
 
 export const allCountriesQuery = () => ({
   name: "all-countries",
-  text: "SELECT cn_iso, cn_case_name, cn_phonecode, cn_flag FROM country ORDER BY cn_case_name",
+  text: "SELECT iso, title_case, phonecode, currency, flag FROM countries ORDER BY title_case",
 })

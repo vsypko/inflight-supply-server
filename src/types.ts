@@ -19,6 +19,7 @@ export interface ICompany {
   co_tb_1: string
   co_tb_2: string
   co_cn_name: string
+  co_cn_currency: string
   co_cn_flag: string
 }
 
@@ -44,10 +45,11 @@ export interface IFleet {
 }
 
 export interface ICountry {
-  cn_iso: string
-  cn_case_name: string
-  cn_phonecode: number
-  cn_flag: string
+  iso: string
+  title_case: string
+  phonecode: number
+  currency: string
+  flag: string
 }
 
 export interface ITokens {

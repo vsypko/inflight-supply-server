@@ -15,8 +15,7 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
     }
     const { email, password } = req.body
     const ip = req.ip
-    const country_iso = await countryByIpQuery(ip)
-
+    // const country_iso = await countryByIpQuery(ip)
     const { user, company, country, tokens } = await userService.signup(email, password, ip)
 
     res.cookie("rf_tkn", tokens?.refreshToken, {
