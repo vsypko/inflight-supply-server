@@ -30,6 +30,8 @@ export async function getData(req: Request, res: Response, next: NextFunction) {
     }
     const table = req.query.tb!.toString()
     const result = await db.query(`SELECT * FROM ${table}`)
+    console.log(result.rows)
+
     res.json(result.rows)
   } catch (e) {
     next(e)
@@ -57,7 +59,7 @@ export async function insertData(req: Request, res: Response, next: NextFunction
     }
     if (req.params.tb_type === "supplies") {
       result = await db.query(
-        `INSERT INTO ${table} (code, title, category, area, description, img_url) VALUES ${data} RETURNING*`,
+        `INSERT INTO ${table} (code, title, price, category, area, description, img_url) VALUES ${data} RETURNING*`,
       )
       res.json({ data: `Inserted ${result.rowCount} rows`, row: result.rows[0] })
       return
@@ -77,13 +79,19 @@ export async function updateData(req: Request, res: Response, next: NextFunction
     if (req.params.tb_type === "flight") {
       await db.query(
         `UPDATE ${table} SET date=$2::date, flight=$3, type=$4, reg=$5, "from"=$6, "to"=$7, std=$8, sta=$9, seats=$10 WHERE id=$1`,
-        [...Object.values(data)],
+        [data.id, data.date, data.flight, data.type, data.reg, data.from, data.to, data.std, data.sta, data.seats],
       )
       res.json({ data: "Flight has been updated" })
       return
     }
     if (req.params.tb_type === "fleet") {
-      await db.query(`UPDATE ${table} SET name=$2, type=$3, reg=$4, seats=$5 WHERE id=$1`, [...Object.values(data)])
+      await db.query(`UPDATE ${table} SET name=$2, type=$3, reg=$4, seats=$5 WHERE id=$1`, [
+        data.id,
+        data.name,
+        data.type,
+        data.reg,
+        data.seats,
+      ])
       res.json({ data: "Aircraft has been updated" })
       return
     }
@@ -95,8 +103,8 @@ export async function updateData(req: Request, res: Response, next: NextFunction
         if (oldUrl) fs.unlinkSync(`uploads/itm/${oldUrl}`)
       }
       await db.query(
-        `UPDATE ${table} SET code=$2, title=$3, category=$4, area=$5, description=$6, img_url=$7 WHERE id=$1`,
-        [...Object.values(data)],
+        `UPDATE ${table} SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`,
+        [data.id, data.code, data.title, data.price, data.category, data.area, data.description, data.img_url],
       )
       res.json({ data: "Item has been updated" })
       return
