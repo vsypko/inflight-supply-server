@@ -61,7 +61,7 @@ export async function insertData(req: Request, res: Response, next: NextFunction
       result = await db.query(
         `INSERT INTO ${table} (code, title, price, category, area, description, img_url) VALUES ${data} RETURNING*`,
       )
-      res.json({ data: `Inserted ${result.rowCount} rows`, row: result.rows[0] })
+      res.json({ data: `Inserted ${result.rowCount} rows`, id: result.rows[0].id })
       return
     }
     res.json({ data: "No data found" })
@@ -100,7 +100,7 @@ export async function updateData(req: Request, res: Response, next: NextFunction
       if (data.id) {
         const url = await db.query(`SELECT img_url FROM ${table} WHERE id=$1`, [data.id])
         const oldUrl = url.rows[0].img_url
-        if (oldUrl) fs.unlinkSync(`uploads/itm/${oldUrl}`)
+        if (oldUrl && oldUrl !== "undefined") fs.unlinkSync(`uploads/itm/${oldUrl}`)
       }
       await db.query(
         `UPDATE ${table} SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`,
