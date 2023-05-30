@@ -28,7 +28,7 @@ export async function signup(
   const hashedPassword = await bcrypt.hash(password, 3)
   const newUser = await db.query(userInsertQuery(email, hashedPassword))
   if (newUser.rowCount === 0) throw { status: 500, data: "Internal server error" }
-  const { id: id, usr_role: role } = newUser.rows[0]
+  const { id, role } = newUser.rows[0]
   const tokens = generateTokens({ id, role })
   const { user, company, country } = await getUserData(id, ip)
   return {
@@ -44,9 +44,9 @@ export async function signup(
 export async function signin(email: string, password: string, ip: string) {
   const checkUser = await db.query(userEmailCheckQuery(email))
   if (checkUser.rowCount === 0) throw { status: 400, data: "Such user not found!\n Please sign up" }
-  const checkPassword = await bcrypt.compare(password, checkUser.rows[0].usr_password)
+  const checkPassword = await bcrypt.compare(password, checkUser.rows[0].password)
   if (!checkPassword) throw { status: 400, data: "Incorrect password" }
-  const { id: id, usr_role: role } = checkUser.rows[0]
+  const { id, role } = checkUser.rows[0]
   const tokens = generateTokens({ id, role })
   const { user, company, country } = await getUserData(id, ip)
   return {
@@ -72,26 +72,19 @@ export async function getUserData(
   if (userData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
   user = userData.rows[0]
 
-  //---get user company an company country if exists----------------------------------------------
+  //---get user company if exists----------------------------------------------
 
-  if (user.usr_co) {
-    const companyData = await db.query(companyByIdQuery(user.usr_co))
-    if (companyData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
-    company = companyData.rows[0]
-    if (company && company.co_cn) {
-      const countryData = await db.query(countryByISOQuery(company.co_cn))
-      if (countryData.rowCount === 0) {
-        company = undefined
-      } else {
-        company.co_cn_name = countryData.rows[0].title_case
-        company.co_cn_currency = countryData.rows[0].currency
-        company.co_cn_flag = countryData.rows[0].flag
-      }
-    }
+  if (user.company) {
+    const companyData = await db.query(companyByIdQuery(user.company))
+    if (!companyData || companyData.rowCount === 0)
+      throw { status: 500, data: "Internal server error.\n Database failure." }
+    if (!companyData.rows[0]) throw { status: 500, data: "Internal server error.\n Database failure." }
+    const countryData = await db.query(countryByISOQuery(companyData.rows[0].country))
+    company = { ...companyData.rows[0], country: countryData.rows[0] }
   }
   //---get user country if exists or by ip-----------------------------------------------------------------
-  if (user.usr_cn && user.usr_cn != "ZZ") {
-    country_iso = user.usr_cn
+  if (user.country && user.country != "ZZ") {
+    country_iso = user.country
   } else {
     // country_iso = await countryByIpQuery(ip)
     // country_iso = await countryByIpQuery("45.138.10.61")

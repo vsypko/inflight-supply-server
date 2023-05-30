@@ -8,43 +8,43 @@ export const airportQuery = (search: string) => ({
 
 export const userEmailCheckQuery = (email: string) => ({
   name: "email-check",
-  text: "SELECT id, usr_password, usr_role FROM users WHERE usr_email=$1",
+  text: "SELECT id, password, role FROM users WHERE email=$1",
   values: [email],
 })
 
 export const userInsertQuery = (email: string, password: string) => ({
   name: "insert-user",
-  text: "INSERT INTO users (usr_email, usr_password) values ($1, $2) RETURNING *",
+  text: "INSERT INTO users (email, password) values ($1, $2) RETURNING *",
   values: [email, password],
 })
 
 export const userGetUrlQuery = (id: number) => ({
   name: "get-user-url",
-  text: "SELECT usr_url FROM users WHERE id=$1",
+  text: "SELECT img_url FROM users WHERE id=$1",
   values: [id],
 })
 
 export const userInsertUrlQuery = (id: number, url: string) => ({
   name: "insert-user-url",
-  text: "UPDATE users SET usr_url=$2 WHERE id=$1",
+  text: "UPDATE users SET img_url=$2 WHERE id=$1",
   values: [id, url],
 })
 
 export const userRemoveUrlQuery = (url: string) => ({
   name: "delete-user-url",
-  text: "UPDATE users SET usr_url='' WHERE usr_url=$1",
+  text: "UPDATE users SET img_url='' WHERE img_url=$1",
   values: [url],
 })
 
 export const userByIdQuery = (id: number) => ({
   name: "user-by-id",
-  text: "SELECT id, usr_firstname, usr_lastname, usr_email, usr_url, role_name as usr_role_name, usr_co, usr_phone, usr_cn FROM users INNER JOIN roles ON usr_role=role_id WHERE id=$1",
+  text: "SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id WHERE id=$1",
   values: [id],
 })
 
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
-  text: "SELECT id, co_name, co_category, co_iata_code, co_cn, co_tb_1, co_tb_2 FROM company WHERE id=$1",
+  text: "SELECT id, name, category, iata, country, table1, table2 FROM companies WHERE id=$1",
   values: [id],
 })
 
@@ -87,22 +87,22 @@ export const userUpdateProfileQuery = ({
   firstname,
   lastname,
   phone,
-  cn,
+  country,
 }: {
   id: number
   firstname: string
   lastname: string
   phone: string
-  cn: string
+  country: string
 }) => ({
   name: "insert-user-profile",
-  text: "UPDATE users SET usr_firstname=$2, usr_lastname=$3, usr_phone=$4, usr_cn=$5 WHERE id=$1 RETURNING *",
-  values: [id, firstname, lastname, phone, cn],
+  text: "UPDATE users SET firstname=$2, lastname=$3, phone=$4, country=$5 WHERE id=$1 RETURNING *",
+  values: [id, firstname, lastname, phone, country],
 })
 
 export const allUsersQuery = () => ({
   name: "all-users",
-  text: "SELECT id, usr_firstname, usr_lastname, usr_email, usr_url, role_name as usr_role_name, usr_co, usr_phone, usr_cn FROM users INNER JOIN roles ON usr_role=role_id",
+  text: "SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id",
 })
 
 export const allCountriesQuery = () => ({

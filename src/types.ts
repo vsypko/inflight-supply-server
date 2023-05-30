@@ -1,26 +1,41 @@
 export interface IUser {
   id: number
-  usr_firstname: string | undefined
-  usr_lastname: string | undefined
-  usr_email: string
-  usr_url: string | undefined
-  usr_role_name: string
-  usr_co: number | undefined
-  usr_phone: string | undefined
-  usr_cn: string | undefined
+  firstname: string | undefined
+  lastname: string | undefined
+  email: string
+  img_url: string | undefined
+  role: string
+  company: number | undefined
+  phone: string | undefined
+  country: string
 }
+
+// export interface ICompany {
+//   id: number
+//   name: string
+//   category: string
+//   iata: string
+//   table1: string
+//   table2: string
+//   country: string
+// }
 
 export interface ICompany {
   id: number
-  co_name: string
-  co_category: string
-  co_iata_code: string
-  co_cn: string
-  co_tb_1: string
-  co_tb_2: string
-  co_cn_name: string
-  co_cn_currency: string
-  co_cn_flag: string
+  name: string
+  category: string
+  iata: string
+  table1: string
+  table2: string
+  country: ICountry
+}
+
+export interface ICountry {
+  iso: string
+  title_case: string
+  phonecode: number
+  currency: string
+  flag: string
 }
 
 export interface IFlight {
@@ -42,14 +57,6 @@ export interface IFleet {
   acType: string
   acReg: string
   seats: number
-}
-
-export interface ICountry {
-  iso: string
-  title_case: string
-  phonecode: number
-  currency: string
-  flag: string
 }
 
 export interface ITokens {
