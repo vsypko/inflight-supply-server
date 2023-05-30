@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express"
 import { validationResult } from "express-validator"
 import jwt from "jsonwebtoken"
-import { countryByIpQuery } from "../db/queries.js"
 import { generateTokens } from "../services/token.service.js"
 import * as userService from "../services/user.service.js"
 
@@ -15,7 +14,6 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
     }
     const { email, password } = req.body
     const ip = req.ip
-    // const country_iso = await countryByIpQuery(ip)
     const { user, company, country, tokens } = await userService.signup(email, password, ip)
 
     res.cookie("rf_tkn", tokens?.refreshToken, {
@@ -36,8 +34,6 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
   try {
     const { email, password } = req.body
 
-    const ip = req.ip
-
     if (email && password) {
       const err = validationResult(req)
 
@@ -45,7 +41,7 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
         throw { status: 400, data: "Validation Error: Invalid email or password" }
       }
 
-      const { user, company, country, tokens } = await userService.signin(email, password, ip)
+      const { user, company, country, tokens } = await userService.signin(email, password)
 
       res.cookie("rf_tkn", tokens?.refreshToken, {
         maxAge: 2592000000,
@@ -73,7 +69,7 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
       secure: true,
     })
 
-    const { user, company, country } = await userService.getUserData(tokenData.id, ip)
+    const { user, company, country } = await userService.getUserData(tokenData.id)
 
     res.json({ user, company, country, token: tokens.accessToken })
   } catch (e) {

@@ -12,10 +12,10 @@ export const userEmailCheckQuery = (email: string) => ({
   values: [email],
 })
 
-export const userInsertQuery = (email: string, password: string) => ({
+export const userInsertQuery = (email: string, password: string, country: string) => ({
   name: "insert-user",
-  text: "INSERT INTO users (email, password) values ($1, $2) RETURNING *",
-  values: [email, password],
+  text: "INSERT INTO users (email, password, country) values ($1, $2, $3) RETURNING *",
+  values: [email, password, country],
 })
 
 export const userGetUrlQuery = (id: number) => ({
@@ -59,15 +59,15 @@ export async function countryByIpQuery(ip: string): Promise<string> {
     ip = ip.replace("::ffff:", "")
   }
   if (ip.includes("127.0.0.1") || (ip.includes("192.168.") && ip.indexOf("192.168.") === 0)) {
-    return "ZZ"
+    return "UA"
   }
   if (ip.includes(".")) {
     const country_iso = await db.query(countryByIpv4Query(ip))
-    if (country_iso.rowCount != 0) return country_iso.rows[0].ip_cn
+    if (country_iso.rowCount !== 0) return country_iso.rows[0].ip_cn
   }
   const country_iso = await db.query(countryByIpv6Query(ip))
-  if (country_iso.rowCount != 0) return country_iso.rows[0].ip_cn
-  return "ZZ"
+  if (country_iso.rowCount !== 0) return country_iso.rows[0].ip_cn
+  return "UA"
 }
 
 export const countryByIpv4Query = (ip: string) => ({
