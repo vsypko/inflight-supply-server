@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 
 import db from "../db/db.js"
 import { airportQuery, allCountriesQuery, allUsersQuery } from "../db/queries.js"
+import cookieParser from "cookie-parser"
 
 export async function getAirport(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -14,7 +15,8 @@ export async function getAirport(req: Request, res: Response, next: NextFunction
 
 export async function getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const users = await db.query(allUsersQuery())
+    const { column, value } = req.query
+    const users = await db.query(allUsersQuery(column as string, Number(value)))
     if (users) res.send({ total_count: users.rowCount, users: users.rows })
   } catch (e) {
     next(e)

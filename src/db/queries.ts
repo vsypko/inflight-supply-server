@@ -100,10 +100,14 @@ export const userUpdateProfileQuery = ({
   values: [id, firstname, lastname, phone, country],
 })
 
-export const allUsersQuery = () => ({
-  name: "all-users",
-  text: "SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id",
-})
+export const allUsersQuery = (column?: string, value?: number) => {
+  let search = ""
+  if (column && value) search = `WHERE ${column}=${value}`
+  return {
+    name: column ? "team" : "all-users",
+    text: `SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id ${search}`,
+  }
+}
 
 export const allCountriesQuery = () => ({
   name: "all-countries",

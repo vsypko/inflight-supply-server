@@ -52,7 +52,7 @@ companyItemsRouter.post("/img/update", itemImgUpload.single("image"), company.up
 companyItemsRouter.delete("/img/:url", company.deleteImg)
 
 searchRouter.use("/airport", airportRouter)
-searchRouter.use("/users", authMiddleware(2), usersRouter)
+searchRouter.use("/users", authMiddleware(4), usersRouter)
 searchRouter.use("/countries", countriesRouter)
 
 userRouter.use("/auth", authRouter)
