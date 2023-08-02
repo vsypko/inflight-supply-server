@@ -26,6 +26,7 @@ const userRouter = express.Router()
 
 const airportRouter = express.Router()
 airportRouter.get("/", search.getAirport)
+airportRouter.get("/code", search.getAirportbyCode)
 
 const authRouter = express.Router()
 authRouter.post("/signup", body("email").isEmail(), body("password").isLength({ min: 6, max: 12 }), auth.signup)

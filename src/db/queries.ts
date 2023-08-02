@@ -5,6 +5,11 @@ export const airportQuery = (search: string) => ({
   text: "SELECT ap_id, ap_type, ap_name, ap_latitude, ap_longitude, ap_elevation_ft, ap_continent, ap_country, ap_iso_country, ap_iso_region, ap_municipality, ap_scheduled, ap_icao_code, ap_iata_code, ap_home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by ap_name",
   values: [search],
 })
+export const airportbycodeQuery = (search: string) => ({
+  name: "airportbycode",
+  text: "SELECT ap_id, ap_type, ap_name, ap_latitude, ap_longitude, ap_elevation_ft, ap_continent, ap_country, ap_iso_country, ap_iso_region, ap_municipality, ap_scheduled, ap_icao_code, ap_iata_code, ap_home_link FROM airports WHERE ap_iata_code=$1",
+  values: [search],
+})
 
 export const userEmailCheckQuery = (email: string) => ({
   name: "email-check",
