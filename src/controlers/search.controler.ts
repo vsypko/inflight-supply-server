@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from "express"
+import { ISchedule } from "../types.js"
 
 import db from "../db/db.js"
-import { airportQuery, airportbycodeQuery, allCountriesQuery, allUsersQuery } from "../db/queries.js"
+import {
+  airportQuery,
+  airportbycodeQuery,
+  allCountriesQuery,
+  allUsersQuery,
+  scheduleFromQuery,
+  scheduleToQuery,
+} from "../db/queries.js"
 import cookieParser from "cookie-parser"
 
 export async function getAirport(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -36,6 +44,22 @@ export async function getAllCountries(req: Request, res: Response, next: NextFun
   try {
     const countries = await db.query(allCountriesQuery())
     if (countries) res.json(countries.rows)
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function getSchedule(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const airport = req.query.airport?.toString()
+    const date = req.query.date?.toString()
+    if (!airport || !date) throw { status: 400, data: "Bad request. No params found." }
+    const scheduleFrom = await db.query(scheduleFromQuery(airport, date))
+    const scheduleTo = await db.query(scheduleToQuery(airport, date))
+    const schedule = { scheduleFrom: [] as ISchedule[], scheduleTo: [] as ISchedule[] }
+    if (scheduleFrom) schedule.scheduleFrom = scheduleFrom.rows
+    if (scheduleTo) schedule.scheduleTo = scheduleTo.rows
+    res.send(schedule)
   } catch (e) {
     next(e)
   }

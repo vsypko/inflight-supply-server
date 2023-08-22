@@ -49,6 +49,8 @@ export interface IFlight {
   std: number
   sta: number
   seats: number
+  co_id: number
+  co_iata: string
 }
 
 export interface IFleet {
@@ -57,6 +59,13 @@ export interface IFleet {
   acType: string
   acReg: string
   seats: number
+}
+
+export interface ISchedule {
+  departure?: string
+  arrival?: string
+  destination: string
+  flight: string
 }
 
 export interface ITokens {
