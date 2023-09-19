@@ -1,26 +1,26 @@
 import db from "./db.js"
 
-export const airportQuery = (search: string) => ({
+export const airportSearchQuery = (search: string) => ({
   name: "airport",
-  text: "SELECT ap_id, ap_type, ap_name, ap_latitude, ap_longitude, ap_elevation_ft, ap_continent, ap_country, ap_iso_country, ap_iso_region, ap_municipality, ap_scheduled, ap_icao_code, ap_iata_code, ap_home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by ap_name",
+  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name",
   values: [search],
 })
 
 export const scheduleFromQuery = (airport: string, date: string) => ({
   name: "scheduleFrom",
-  text: `SELECT TO_CHAR(std,'HH24:MI') AS departure, ap_municipality || ' ['|| "to" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "to"=ap_iata_code WHERE date=$2::date AND "from"=$1 ORDER BY std;`,
+  text: `SELECT TO_CHAR(std,'HH24:MI') AS departure, municipality || ' ['|| "to" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "to"=iata WHERE date=$2::date AND "from"=$1 ORDER BY std;`,
   values: [airport, date],
 })
 
 export const scheduleToQuery = (airport: string, date: string) => ({
   name: "scheduleTo",
-  text: `SELECT TO_CHAR(sta,'HH24:MI') AS arrival, ap_municipality || ' ['|| "from" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "from"=ap_iata_code WHERE date=$2::date AND "to"=$1 ORDER BY std;`,
+  text: `SELECT TO_CHAR(sta,'HH24:MI') AS arrival, municipality || ' ['|| "from" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "from"=iata WHERE date=$2::date AND "to"=$1 ORDER BY std;`,
   values: [airport, date],
 })
 
-export const airportbycodeQuery = (search: string) => ({
+export const airportByCodeQuery = (search: string) => ({
   name: "airportbycode",
-  text: "SELECT ap_id, ap_type, ap_name, ap_latitude, ap_longitude, ap_elevation_ft, ap_continent, ap_country, ap_iso_country, ap_iso_region, ap_municipality, ap_scheduled, ap_icao_code, ap_iata_code, ap_home_link FROM airports WHERE ap_iata_code=$1",
+  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1",
   values: [search],
 })
 
@@ -62,7 +62,7 @@ export const userByIdQuery = (id: number) => ({
 
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
-  text: "SELECT id, name, category, iata, country FROM companies WHERE id=$1",
+  text: "SELECT * FROM companies WHERE id=$1",
   values: [id],
 })
 

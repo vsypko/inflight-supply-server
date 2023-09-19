@@ -45,6 +45,7 @@ const companyRouter = express.Router()
 const companyItemsRouter = express.Router()
 companyRouter.use("/items", companyItemsRouter)
 
+companyRouter.get("/", company.getCompany)
 companyRouter.get("/:type", company.getData)
 companyRouter.post("/:type", company.insertData)
 companyRouter.patch("/:type", company.updateData)
@@ -63,7 +64,7 @@ userRouter.get("/geturl/:url", user.getUserPhoto)
 userRouter.delete("/deleteurl/:url", user.removeUserPhoto)
 userRouter.post("/updateprofile", user.updateUserProfile)
 
-companyRouter.use
+// companyRouter.use
 
 router.use("/user", userRouter)
 router.use("/search", searchRouter)

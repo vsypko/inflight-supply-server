@@ -3,18 +3,17 @@ import { ISchedule } from "../types.js"
 
 import db from "../db/db.js"
 import {
-  airportQuery,
-  airportbycodeQuery,
+  airportByCodeQuery,
   allCountriesQuery,
   allUsersQuery,
   scheduleFromQuery,
   scheduleToQuery,
+  airportSearchQuery,
 } from "../db/queries.js"
-import cookieParser from "cookie-parser"
 
 export async function getAirport(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const airports = await db.query(airportQuery(`${req.query.q}:*`))
+    const airports = await db.query(airportSearchQuery(`${req.query.q}:*`))
     if (airports) res.send({ total_count: airports.rowCount, airports: airports.rows })
   } catch (e) {
     next(e)
@@ -23,7 +22,7 @@ export async function getAirport(req: Request, res: Response, next: NextFunction
 
 export async function getAirportbyCode(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const airports = await db.query(airportbycodeQuery(req.query.q as string))
+    const airports = await db.query(airportByCodeQuery(req.query.q as string))
     if (airports) res.send({ total_count: airports.rowCount, airports: airports.rows })
   } catch (e) {
     next(e)

@@ -3,13 +3,23 @@ import db from "../db/db.js"
 import { QueryResult } from "pg"
 import * as fs from "fs"
 
+export async function getCompany(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const companies = await db.query(`SELECT * FROM companies WHERE name ILIKE '%${req.query.q}%'`)
+    if (companies) res.send({ total_count: companies.rowCount, companies: companies.rows })
+  } catch (e) {
+    next(e)
+  }
+}
+
 export async function getData(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
     if (req.params.type === "flights") {
       const date = req.query.date!.toString()
       const result = await db.query(
-        `SELECT id, TO_CHAR(date,'YYYY-MM-DD') as date, flight, type, reg, "from", "to", TO_CHAR(std,'HH24:MI') as std, to_char(sta,'HH24:MI') as sta, seats,co_id, co_iata FROM flights WHERE co_id=$1 AND date=$2::date ORDER BY "from" ASC, std ASC`,
+        `SELECT id, TO_CHAR(date,'YYYY-MM-DD') as date, flight, type, reg, "from", "to", TO_CHAR(std,'HH24:MI') as std, to_char(sta,'HH24:MI') as sta, seats, co_id, co_iata FROM flights WHERE co_id=$1 AND date=$2::date ORDER BY "from" ASC, std ASC`,
         [req.query.id, date],
       )
       res.json(result.rows)
