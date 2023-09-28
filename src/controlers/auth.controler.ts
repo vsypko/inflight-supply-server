@@ -18,9 +18,9 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
 
     res.cookie("rf_tkn", tokens?.refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      // httpOnly: true,
+      sameSite: "lax",
+      // secure: true,
     })
     res.json({ user, company, country, token: tokens?.accessToken })
   } catch (e) {
@@ -45,9 +45,9 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
 
       res.cookie("rf_tkn", tokens?.refreshToken, {
         maxAge: 2592000000,
-        httpOnly: true,
-        sameSite: "none",
-        secure: true,
+        // httpOnly: true,
+        sameSite: "lax",
+        // secure: true,
       })
       res.json({ user, company, country, token: tokens!.accessToken })
       return
@@ -64,9 +64,9 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
 
     res.cookie("rf_tkn", tokens.refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      // httpOnly: true,
+      sameSite: "lax",
+      // secure: true,
     })
 
     const { user, company, country } = await userService.getUserData(tokenData.id)
@@ -93,9 +93,9 @@ export function tokenUpdate(req: Request, res: Response, next: NextFunction): vo
 
     res.cookie("rf_tkn", tokens.refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      // httpOnly: true,
+      sameSite: "lax",
+      // secure: true,
     })
     res.json(tokens.accessToken)
   } catch (e) {
