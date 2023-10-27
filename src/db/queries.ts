@@ -2,7 +2,7 @@ import db from "./db.js"
 
 export const airportSearchQuery = (search: string) => ({
   name: "airport",
-  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name",
+  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name",
   values: [search],
 })
 
@@ -26,13 +26,13 @@ export const airportByCodeQuery = (search: string) => ({
 
 export const userEmailCheckQuery = (email: string) => ({
   name: "email-check",
-  text: "SELECT id, password, role FROM users WHERE email=$1",
+  text: "SELECT * FROM users WHERE email=$1",
   values: [email],
 })
 
 export const userInsertQuery = (email: string, password: string, country: string) => ({
   name: "insert-user",
-  text: "INSERT INTO users (email, password, country) values ($1, $2, $3) RETURNING *",
+  text: "INSERT INTO users (email, password, country_iso) values ($1, $2, $3) RETURNING *",
   values: [email, password, country],
 })
 
@@ -56,7 +56,7 @@ export const userRemoveUrlQuery = (url: string) => ({
 
 export const userByIdQuery = (id: number) => ({
   name: "user-by-id",
-  text: "SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id WHERE id=$1",
+  text: "SELECT u.id, u.firstname, u.lastname, u.email, u.img_url, r.role_name role, u.company_id, u.phone, u.country_iso, c.title_case country, c.phonecode, c.flag FROM users u INNER JOIN roles r ON role=role_id INNER JOIN countries c ON country_iso=iso WHERE u.id=$1",
   values: [id],
 })
 
@@ -68,7 +68,7 @@ export const companyByIdQuery = (id: number) => ({
 
 export const countryByISOQuery = (country_iso: string) => ({
   name: "country-by-iso",
-  text: "SELECT iso, title_case, phonecode, currency, flag FROM countries WHERE iso=$1",
+  text: "SELECT * FROM countries WHERE iso=$1",
   values: [country_iso],
 })
 
@@ -105,17 +105,17 @@ export const userUpdateProfileQuery = ({
   firstname,
   lastname,
   phone,
-  country,
+  country_iso,
 }: {
   id: number
   firstname: string
   lastname: string
   phone: string
-  country: string
+  country_iso: string
 }) => ({
-  name: "insert-user-profile",
-  text: "UPDATE users SET firstname=$2, lastname=$3, phone=$4, country=$5 WHERE id=$1 RETURNING *",
-  values: [id, firstname, lastname, phone, country],
+  name: "update-user-profile",
+  text: "UPDATE users SET firstname=$2, lastname=$3, phone=$4, country_iso=$5 WHERE id=$1 RETURNING *",
+  values: [id, firstname, lastname, phone, country_iso],
 })
 
 export const allUsersQuery = (column?: string, value?: number) => {
@@ -123,7 +123,7 @@ export const allUsersQuery = (column?: string, value?: number) => {
   if (column && value) search = `WHERE ${column}=${value}`
   return {
     name: column ? "team" : "all-users",
-    text: `SELECT id, firstname, lastname, email, img_url, role_name as role, company, phone, country FROM users INNER JOIN roles ON role=role_id ${search}`,
+    text: `SELECT id, firstname, lastname, email, img_url, role_name as role, company_id, phone, country_iso FROM users INNER JOIN roles ON role=role_id ${search}`,
   }
 }
 

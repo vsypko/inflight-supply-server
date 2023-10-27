@@ -2,18 +2,29 @@ import { Request, Response, NextFunction } from "express"
 import db from "../db/db.js"
 import { QueryResult } from "pg"
 import * as fs from "fs"
+import { countryByISOQuery } from "../db/queries.js"
 
-export async function getCompany(req: Request, res: Response, next: NextFunction) {
+export async function getCompanies(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
-    const companies = await db.query(`SELECT * FROM companies WHERE name ILIKE '%${req.query.q}%'`)
+    const companies = await db.query(`SELECT * FROM companies WHERE name ILIKE '%${req.query.q}%' ORDER BY name`)
     if (companies) res.send({ total_count: companies.rowCount, companies: companies.rows })
   } catch (e) {
     next(e)
   }
 }
 
-export async function getData(req: Request, res: Response, next: NextFunction) {
+export async function getCompanyCountry(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query || typeof req.query.q != "string") throw { status: 400, data: "Bad request" }
+    const country = await db.query(countryByISOQuery(req.query.q))
+    if (country) res.send(country.rows[0])
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function getCompanyItems(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
     if (req.params.type === "flights") {
@@ -44,7 +55,7 @@ export async function getData(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export async function insertData(req: Request, res: Response, next: NextFunction) {
+export async function insertCompanyItems(req: Request, res: Response, next: NextFunction) {
   let result: QueryResult<any>
   try {
     if (!req.params) throw { status: 400, data: "Bad request. No params found." }
@@ -80,7 +91,7 @@ export async function insertData(req: Request, res: Response, next: NextFunction
   }
 }
 
-export async function updateData(req: Request, res: Response, next: NextFunction) {
+export async function updateCompanyItem(req: Request, res: Response, next: NextFunction) {
   if (!req.params) throw { status: 400, data: "Bad request. No params found." }
   try {
     const data = req.body.value
@@ -123,7 +134,7 @@ export async function updateData(req: Request, res: Response, next: NextFunction
   }
 }
 
-export async function deleteData(req: Request, res: Response, next: NextFunction) {
+export async function deleteCompanyItem(req: Request, res: Response, next: NextFunction) {
   if (!req.query && !req.params) throw { status: 400, data: "Bad request. No query found." }
   try {
     const type = req.params.type.toString()
@@ -144,7 +155,7 @@ export async function deleteData(req: Request, res: Response, next: NextFunction
   }
 }
 
-export async function getImgUrl(req: Request, res: Response, next: NextFunction) {
+export async function getItemImgUrl(req: Request, res: Response, next: NextFunction) {
   try {
     if (!fs.existsSync(`uploads/itm/${req.params.url}`)) throw { status: 400, data: "Bad request. File load failure." }
     const image = fs.readFileSync(`uploads/itm/${req.params.url}`)
@@ -156,7 +167,7 @@ export async function getImgUrl(req: Request, res: Response, next: NextFunction)
   }
 }
 
-export async function updateImg(req: Request, res: Response, next: NextFunction) {
+export async function updateItemImg(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.body.id
     const type = req.body.type.toString()
@@ -172,7 +183,7 @@ export async function updateImg(req: Request, res: Response, next: NextFunction)
   }
 }
 
-export async function deleteImg(req: Request, res: Response, next: NextFunction) {
+export async function deleteItemImg(req: Request, res: Response, next: NextFunction) {
   if (!req.body) throw { status: 400, data: "Bad request. Invalid query string." }
   try {
     const type = req.params.type.toString()

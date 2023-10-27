@@ -26,9 +26,13 @@ export function errorMiddleware(err, req, res, next) {
         return;
     }
     if (typeof err === "object" && err != null && "code" in err) {
+        if (err.code === "23505") {
+            res.status(400).json("Bad request. Unique data violation.");
+            return;
+        }
         res.status(400).json(`Bad request.\n Code: ${err.code}, ${err.toString()}`);
         return;
     }
-    res.status(400).json(err);
+    res.status(400).json("Something went wrong!");
 }
 //# sourceMappingURL=middleware.js.map

@@ -7,10 +7,11 @@ import {
   countryByISOQuery,
   countryByIpQuery,
   userGetUrlQuery,
+  userByIdQuery,
 } from "../db/queries.js"
 import * as fs from "fs"
-import { ICountry, IUser } from "../types.js"
-import { getUserData } from "../services/user.service.js"
+import { ICountry, User } from "../types.js"
+// import { getUserData } from "../services/user.service.js"
 
 export async function getUserPhoto(req: Request, res: Response, next: NextFunction) {
   try {
@@ -55,18 +56,16 @@ export async function removeUserPhoto(req: Request, res: Response, next: NextFun
 }
 
 export async function updateUserProfile(req: Request, res: Response, next: NextFunction) {
-  let userData: IUser
+  let userData: User
   let country: ICountry
   try {
     if (!req.body) throw { status: 400, data: "Bad request. Incorrect data." }
-    const userRows = await db.query(userUpdateProfileQuery(req.body))
-    if (userRows.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
-    userData = userRows.rows[0]
-    const { user, country } = await getUserData(userData.id)
-    res.json({
-      user,
-      country,
-    })
+    const userData = await db.query(userUpdateProfileQuery(req.body))
+    if (userData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
+    // const user = await db.query(userByIdQuery(userData.rows[0].id))
+    const data = await db.query(userByIdQuery(userData.rows[0].id))
+    const user: User = data.rows[0]
+    res.json(user)
   } catch (e) {
     next(e)
   }

@@ -6,20 +6,23 @@ import * as user from "../controlers/user.controler.js";
 import * as company from "../controlers/company.controler.js";
 import { authMiddleware } from "../middlewares/middleware.js";
 import multer from "multer";
-const fileStorageConfig = multer.diskStorage({
+const imgFileStorageConfig = (path) => multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/uph");
+        cb(null, path);
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname);
     },
 });
-const photoUpload = multer({ storage: fileStorageConfig });
+const userImgUpload = multer({ storage: imgFileStorageConfig("uploads/uph") });
+const itemImgUpload = multer({ storage: imgFileStorageConfig("uploads/itm") });
 const router = express.Router();
 const searchRouter = express.Router();
 const userRouter = express.Router();
 const airportRouter = express.Router();
 airportRouter.get("/", search.getAirport);
+airportRouter.get("/code", search.getAirportbyCode);
+airportRouter.get("/schedule", search.getSchedule);
 const authRouter = express.Router();
 authRouter.post("/signup", body("email").isEmail(), body("password").isLength({ min: 6, max: 12 }), auth.signup);
 authRouter.post("/signin", body("email").isEmail(), body("password").isLength({ min: 6, max: 12 }), auth.signin);
@@ -30,19 +33,24 @@ usersRouter.get("/", search.getAllUsers);
 const countriesRouter = express.Router();
 countriesRouter.get("/", search.getAllCountries);
 const companyRouter = express.Router();
-companyRouter.get("/:tb_type", company.getData);
-companyRouter.post("/:tb_type", company.insertData);
-companyRouter.patch("/:tb_type", company.updateData);
-companyRouter.delete("/:tb_type", company.deleteData);
+const companyItemsRouter = express.Router();
+companyRouter.use("/items", companyItemsRouter);
+companyRouter.get("/", company.getCompanies);
+companyRouter.get("/:type", company.getCompanyItems);
+companyRouter.post("/:type", company.insertCompanyItems);
+companyRouter.patch("/:type", company.updateCompanyItem);
+companyRouter.delete("/:type", company.deleteCompanyItem);
+companyItemsRouter.get("/img/:url", company.getItemImgUrl);
+companyItemsRouter.post("/img/update", itemImgUpload.single("image"), company.updateItemImg);
+companyItemsRouter.delete("/img/:type", company.deleteItemImg);
 searchRouter.use("/airport", airportRouter);
-searchRouter.use("/users", authMiddleware(2), usersRouter);
+searchRouter.use("/users", authMiddleware(4), usersRouter);
 searchRouter.use("/countries", countriesRouter);
 userRouter.use("/auth", authRouter);
-userRouter.post("/updateurl", photoUpload.single("photo"), user.saveUserPhoto);
-userRouter.post("/updateprofile", user.updateUserProfile);
+userRouter.post("/updateurl", userImgUpload.single("image"), user.saveUserPhoto);
 userRouter.get("/geturl/:url", user.getUserPhoto);
 userRouter.delete("/deleteurl/:url", user.removeUserPhoto);
-companyRouter.use;
+userRouter.post("/updateprofile", user.updateUserProfile);
 router.use("/user", userRouter);
 router.use("/search", searchRouter);
 router.use("/company", companyRouter);

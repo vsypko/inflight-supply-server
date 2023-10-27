@@ -1,13 +1,31 @@
-export interface IUser {
+// export interface User {
+//   id: number
+//   firstname: string
+//   lastname: string
+//   email: string
+//   img_url: string
+//   role: string
+//   company: number
+//   phone: string
+//   country: string
+//   token: string
+// }
+
+export interface User {
   id: number
-  firstname: string | undefined
-  lastname: string | undefined
+  firstname: string
+  lastname: string
   email: string
-  img_url: string | undefined
+  img_url: string
   role: string
-  company: number | undefined
-  phone: string | undefined
+  phone: string
+  img_url_data: string
+  country_iso: string
   country: string
+  phonecode: number
+  flag: string
+  company_id: number
+  token: string
 }
 
 export interface ICompany {
@@ -17,13 +35,7 @@ export interface ICompany {
   reg_number: string
   icao?: string
   iata?: string
-  country: {
-    iso: string
-    title_case: string
-    phonecode: number
-    currency: string
-    flag: string
-  }
+  country: string
   city: string
   address: string
   link?: string
@@ -73,7 +85,7 @@ export interface ITokens {
 }
 
 export interface IUserStateResponse {
-  user: IUser | undefined
+  user: User | undefined
   company: ICompany | undefined
   country: ICountry | undefined
   tokens: ITokens | undefined

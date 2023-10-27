@@ -3,6 +3,8 @@ import { validationResult } from "express-validator"
 import jwt from "jsonwebtoken"
 import { generateTokens } from "../services/token.service.js"
 import * as userService from "../services/user.service.js"
+import { userByIdQuery } from "../db/queries.js"
+import db from "../db/db.js"
 
 //-------User Sign Up Function-------------------------------------------------------------------------------
 
@@ -14,15 +16,19 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
     }
     const { email, password } = req.body
     const ip = req.ip
-    const { user, company, country, tokens } = await userService.signup(email, password, ip)
+    const {
+      user,
+      tokens: { refreshToken, accessToken },
+    } = await userService.signup(email, password, ip)
 
-    res.cookie("rf_tkn", tokens?.refreshToken, {
+    res.cookie("rf_tkn", refreshToken, {
       maxAge: 2592000000,
       // httpOnly: true,
       sameSite: "lax",
       // secure: true,
     })
-    res.json({ user, company, country, token: tokens?.accessToken })
+    user.token = accessToken
+    res.json(user)
   } catch (e) {
     next(e)
   }
@@ -41,15 +47,19 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
         throw { status: 400, data: "Validation Error: Invalid email or password" }
       }
 
-      const { user, company, country, tokens } = await userService.signin(email, password)
+      const {
+        user,
+        tokens: { refreshToken, accessToken },
+      } = await userService.signin(email, password)
 
-      res.cookie("rf_tkn", tokens?.refreshToken, {
+      res.cookie("rf_tkn", refreshToken, {
         maxAge: 2592000000,
         // httpOnly: true,
         sameSite: "lax",
         // secure: true,
       })
-      res.json({ user, company, country, token: tokens!.accessToken })
+      user.token = accessToken
+      res.json(user)
       return
     }
     //----User Auto Sign In By Token--------------------------------------------------------------------
@@ -60,18 +70,18 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
       role: number
     }
     if (!tokenData) throw { status: 401, data: "Unauthorized request" }
-    const tokens = generateTokens({ id: tokenData.id, role: tokenData.role })
-
-    res.cookie("rf_tkn", tokens.refreshToken, {
+    const { refreshToken, accessToken } = generateTokens({ id: tokenData.id, role: tokenData.role })
+    res.cookie("rf_tkn", refreshToken, {
       maxAge: 2592000000,
       // httpOnly: true,
       sameSite: "lax",
       // secure: true,
     })
-
-    const { user, company, country } = await userService.getUserData(tokenData.id)
-
-    res.json({ user, company, country, token: tokens.accessToken })
+    const userData = await db.query(userByIdQuery(tokenData.id))
+    if (userData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
+    const user = userData.rows[0]
+    user.token = accessToken
+    res.json(user)
   } catch (e) {
     next(e)
   }
@@ -89,15 +99,15 @@ export function tokenUpdate(req: Request, res: Response, next: NextFunction): vo
       role: number
     }
     if (!tokenData) throw { status: 401, data: "Unauthorized request" }
-    const tokens = generateTokens({ id: tokenData.id, role: tokenData.role })
+    const { refreshToken, accessToken } = generateTokens({ id: tokenData.id, role: tokenData.role })
 
-    res.cookie("rf_tkn", tokens.refreshToken, {
+    res.cookie("rf_tkn", refreshToken, {
       maxAge: 2592000000,
       // httpOnly: true,
       sameSite: "lax",
       // secure: true,
     })
-    res.json(tokens.accessToken)
+    res.json(accessToken)
   } catch (e) {
     next(e)
   }
