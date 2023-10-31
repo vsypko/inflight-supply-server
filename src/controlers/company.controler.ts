@@ -3,11 +3,14 @@ import db from "../db/db.js"
 import { QueryResult } from "pg"
 import * as fs from "fs"
 import { countryByISOQuery } from "../db/queries.js"
+import { IFleet, IFlight } from "../types.js"
 
 export async function getCompanies(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
-    const companies = await db.query(`SELECT * FROM companies WHERE name ILIKE '%${req.query.q}%' ORDER BY name`)
+    const companies = await db.query(
+      `SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.name ILIKE '%${req.query.q}%' ORDER BY co.name`,
+    )
     if (companies) res.send({ total_count: companies.rowCount, companies: companies.rows })
   } catch (e) {
     next(e)
@@ -63,15 +66,24 @@ export async function insertCompanyItems(req: Request, res: Response, next: Next
     if (!data) throw { status: 400, data: "Bad request. File data failure." }
 
     if (req.params.type === "flights") {
+      const values = data
+        .map(
+          (row: IFlight) =>
+            `('${row.date}'::date, ${row.flight}, '${row.type}', '${row.reg}', '${row.from}', '${row.to}', '${row.std}'::time, '${row.sta}'::time, ${row.seats}, ${row.co_id}, '${row.co_iata}')`,
+        )
+        .join(",")
       result = await db.query(
-        `INSERT INTO flights (date, flight, type, reg, "from", "to", std, sta, seats, co_id, co_iata) VALUES ${data}`,
+        `INSERT INTO flights (date, flight, type, reg, "from", "to", std, sta, seats, co_id, co_iata) VALUES ${values}`,
       )
       res.json({ data: `Inserted ${result.rowCount} rows` })
       return
     }
 
     if (req.params.type === "fleet") {
-      result = await db.query(`INSERT INTO fleet (name, type, reg, seats, co_id) VALUES ${data}`)
+      const values = data
+        .map((row: IFleet) => `('${row.name}', '${row.type}', '${row.reg}', ${row.seats}, ${row.co_id})`)
+        .join(",")
+      result = await db.query(`INSERT INTO fleet (name, type, reg, seats, co_id) VALUES ${values}`)
       res.json({ data: `Inserted ${result.rowCount} rows` })
       return
     }

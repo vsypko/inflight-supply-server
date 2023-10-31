@@ -28,14 +28,14 @@ export interface User {
   token: string
 }
 
-export interface ICompany {
+export interface Company {
   id: number
   category: string
   name: string
   reg_number: string
   icao?: string
   iata?: string
-  country: string
+  country_iso: string
   city: string
   address: string
   link?: string
@@ -53,8 +53,8 @@ export interface IFlight {
   id: number
   date: string
   flight: number
-  acType: string
-  acReg: string
+  type: string
+  reg: string
   from: string
   to: string
   std: number
@@ -67,9 +67,10 @@ export interface IFlight {
 export interface IFleet {
   id: number
   name: string
-  acType: string
-  acReg: string
+  type: string
+  reg: string
   seats: number
+  co_id: number
 }
 
 export interface ISchedule {
@@ -84,12 +85,12 @@ export interface ITokens {
   refreshToken: string
 }
 
-export interface IUserStateResponse {
-  user: User | undefined
-  company: ICompany | undefined
-  country: ICountry | undefined
-  tokens: ITokens | undefined
-}
+// export interface IUserStateResponse {
+//   user: User | undefined
+//   company: Company | undefined
+//   country: ICountry | undefined
+//   tokens: ITokens | undefined
+// }
 
 // export interface IAuthResponse {
 //   user: IUserResponse

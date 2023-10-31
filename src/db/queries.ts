@@ -20,7 +20,7 @@ export const scheduleToQuery = (airport: string, date: string) => ({
 
 export const airportByCodeQuery = (search: string) => ({
   name: "airportbycode",
-  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1",
+  text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1",
   values: [search],
 })
 
@@ -62,7 +62,7 @@ export const userByIdQuery = (id: number) => ({
 
 export const companyByIdQuery = (id: number) => ({
   name: "country-by-id",
-  text: "SELECT * FROM companies WHERE id=$1",
+  text: "SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.id=$1",
   values: [id],
 })
 

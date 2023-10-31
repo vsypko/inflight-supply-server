@@ -13,7 +13,7 @@ const port = Number(process.env.PORT) || 3001
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL!, "http://192.168.8.116:5173"],
+    origin: [process.env.CLIENT_URL1 as string],
     credentials: true,
   }),
 )

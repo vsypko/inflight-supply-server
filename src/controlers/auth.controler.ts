@@ -3,8 +3,9 @@ import { validationResult } from "express-validator"
 import jwt from "jsonwebtoken"
 import { generateTokens } from "../services/token.service.js"
 import * as userService from "../services/user.service.js"
-import { userByIdQuery } from "../db/queries.js"
+import { companyByIdQuery, userByIdQuery } from "../db/queries.js"
 import db from "../db/db.js"
+import { Company } from "../types.js"
 
 //-------User Sign Up Function-------------------------------------------------------------------------------
 
@@ -49,6 +50,7 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
 
       const {
         user,
+        company,
         tokens: { refreshToken, accessToken },
       } = await userService.signin(email, password)
 
@@ -59,7 +61,7 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
         // secure: true,
       })
       user.token = accessToken
-      res.json(user)
+      res.json({ user, company })
       return
     }
     //----User Auto Sign In By Token--------------------------------------------------------------------
@@ -81,7 +83,12 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
     if (userData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
     const user = userData.rows[0]
     user.token = accessToken
-    res.json(user)
+    let company = undefined
+    if (user.company_id) {
+      const data = await db.query(companyByIdQuery(user.company_id))
+      company = data.rows[0]
+    }
+    res.json({ user, company })
   } catch (e) {
     next(e)
   }

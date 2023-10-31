@@ -48,12 +48,17 @@ export async function signin(email: string, password: string) {
   if (checkUser.rowCount === 0) throw { status: 400, data: "Such user not found!\n Please sign up" }
   const checkPassword = await bcrypt.compare(password, checkUser.rows[0].password)
   if (!checkPassword) throw { status: 400, data: "Incorrect password" }
-  // const user = checkUser.rows[0]
   const data = await db.query(userByIdQuery(checkUser.rows[0].id))
   const user: User = data.rows[0]
   const tokens = generateTokens({ id: user.id, role: user.role })
+  let company = undefined
+  if (user.company_id) {
+    const data = await db.query(companyByIdQuery(user.company_id))
+    company = data.rows[0]
+  }
   return {
     user,
+    company,
     tokens,
   }
 }
