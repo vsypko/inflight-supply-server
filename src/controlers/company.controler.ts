@@ -3,7 +3,7 @@ import db from "../db/db.js"
 import { QueryResult } from "pg"
 import * as fs from "fs"
 import { countryByISOQuery } from "../db/queries.js"
-import { IFleet, IFlight } from "../types.js"
+import { IFleet, IFlight, ISupply } from "../types.js"
 
 export async function getCompanies(req: Request, res: Response, next: NextFunction) {
   try {
@@ -89,13 +89,19 @@ export async function insertCompanyItems(req: Request, res: Response, next: Next
     }
 
     if (req.params.type === "supplies") {
+      const values = data
+        .map(
+          (row: ISupply) =>
+            `(${row.code},'${row.title}', '${row.category}', '${row.area}', '${row.description}', ${row.price}, '${row.co_id}')`,
+        )
+        .join(",")
+
       result = await db.query(
-        `INSERT INTO supplies (code, title, price, category, area, description, img_url, co_id) VALUES ${data} RETURNING*`,
+        `INSERT INTO supplies (code, title, category, area, description, price, co_id) VALUES ${values} RETURNING*`,
       )
       res.json({ data: `Inserted ${result.rowCount} rows`, id: result.rows[0].id })
       return
     }
-
     res.json({ data: "No data found" })
   } catch (e) {
     console.log(e)
@@ -131,7 +137,7 @@ export async function updateCompanyItem(req: Request, res: Response, next: NextF
       if (data.id) {
         const url = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [data.id])
         const oldUrl = url.rows[0].img_url
-        if (oldUrl && oldUrl !== "undefined") fs.unlinkSync(`uploads/itm/${oldUrl}`)
+        if (oldUrl && oldUrl !== undefined) fs.unlinkSync(`uploads/itm/${oldUrl}`)
       }
       await db.query(
         `UPDATE supplies SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`,
@@ -154,9 +160,10 @@ export async function deleteCompanyItem(req: Request, res: Response, next: NextF
     if (!id || !type) throw { status: 400, data: "Bad request. Item data failure." }
 
     if (type === "supplies") {
-      const getImgUrl = await db.query(`SELECT img_url FROM ${type} WHERE id=$1`, [id])
-      const url = getImgUrl.rows[0].img_url.toString()
-      if (url && url !== "undefined") fs.unlinkSync(`uploads/itm/${url}`)
+      const data = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [id])
+      const url = data.rows[0].img_url
+
+      if (url && url !== undefined) fs.unlinkSync(`uploads/itm/${url}`)
     }
 
     await db.query(`DELETE FROM ${type} WHERE id=$1`, [id])
@@ -182,7 +189,8 @@ export async function getItemImgUrl(req: Request, res: Response, next: NextFunct
 export async function updateItemImg(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.body.id
-    const type = req.body.type.toString()
+    const type = req.body.type
+
     if (!type) throw { status: 400, data: "Bad request. Item data failure." }
 
     //save file with new file name --------------------------------------------------------------------

@@ -73,6 +73,18 @@ export interface IFleet {
   co_id: number
 }
 
+export interface ISupply {
+  id: number
+  code: number
+  title: string
+  category: string
+  area: string
+  description: string
+  img_url: string
+  price: number
+  co_id: number
+}
+
 export interface ISchedule {
   departure?: string
   arrival?: string
