@@ -51,8 +51,16 @@ export async function getCompanyItems(req: Request, res: Response, next: NextFun
       res.json(result.rows)
       return
     }
-    const result = await db.query(`SELECT * FROM companies`)
-    res.json(result.rows)
+
+    if (req.params.type === "places") {
+      const result = await db.query(
+        "SELECT p.id, ap.name, ap.iata, ap.municipality, ap.country, ap.country_iso, p.airport_id, p.company_id FROM places p INNER JOIN airports ap ON p.airport_id=ap.id WHERE company_id=$1",
+        [req.query.id],
+      )
+      res.json(result.rows)
+      return
+    }
+    res.json({ data: "No data found" })
   } catch (e) {
     next(e)
   }
@@ -102,6 +110,17 @@ export async function insertCompanyItems(req: Request, res: Response, next: Next
       res.json({ data: `Inserted ${result.rowCount} rows`, id: result.rows[0].id })
       return
     }
+
+    if (req.params.type === "places") {
+      const values = data[0]
+      result = await db.query("INSERT INTO places (airport_id, company_id) VALUES ($1, $2) RETURNING*", [
+        values.airport_id,
+        values.company_id,
+      ])
+      res.json({ data: "Inserted place of supply" })
+      return
+    }
+
     res.json({ data: "No data found" })
   } catch (e) {
     console.log(e)
@@ -162,12 +181,9 @@ export async function deleteCompanyItem(req: Request, res: Response, next: NextF
     if (type === "supplies") {
       const data = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [id])
       const url = data.rows[0].img_url
-
       if (url && url !== undefined) fs.unlinkSync(`uploads/itm/${url}`)
     }
-
     await db.query(`DELETE FROM ${type} WHERE id=$1`, [id])
-
     res.json({ data: "Data row has been deleted" })
   } catch (e) {
     next(e)

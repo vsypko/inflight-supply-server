@@ -41,7 +41,7 @@ export interface Company {
   link?: string
 }
 
-export interface ICountry {
+export interface Country {
   iso: string
   title_case: string
   phonecode: number

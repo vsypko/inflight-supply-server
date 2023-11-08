@@ -10,7 +10,7 @@ import {
   userByIdQuery,
 } from "../db/queries.js"
 import * as fs from "fs"
-import { ICountry, User } from "../types.js"
+import { Country, User } from "../types.js"
 // import { getUserData } from "../services/user.service.js"
 
 export async function getUserPhoto(req: Request, res: Response, next: NextFunction) {
@@ -57,7 +57,7 @@ export async function removeUserPhoto(req: Request, res: Response, next: NextFun
 
 export async function updateUserProfile(req: Request, res: Response, next: NextFunction) {
   let userData: User
-  let country: ICountry
+  let country: Country
   try {
     if (!req.body) throw { status: 400, data: "Bad request. Incorrect data." }
     const userData = await db.query(userUpdateProfileQuery(req.body))
@@ -69,5 +69,7 @@ export async function updateUserProfile(req: Request, res: Response, next: NextF
     next(e)
   }
 }
+
+export async function checkUserAccount(req: Request, res: Response, next: NextFunction) {}
 
 export async function removeUserProfile(req: Request, res: Response, next: NextFunction) {}
