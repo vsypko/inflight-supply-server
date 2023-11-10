@@ -35,6 +35,7 @@ countriesRouter.get("/", search.getAllCountries);
 const companyRouter = express.Router();
 const companyItemsRouter = express.Router();
 companyRouter.use("/items", companyItemsRouter);
+companyRouter.post("/", company.createCompany);
 companyRouter.get("/", company.getCompanies);
 companyRouter.get("/:type", company.getCompanyItems);
 companyRouter.post("/:type", company.insertCompanyItems);

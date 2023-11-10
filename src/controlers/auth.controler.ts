@@ -29,7 +29,7 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
       // secure: true,
     })
     user.token = accessToken
-    res.json(user)
+    res.json({ user })
   } catch (e) {
     next(e)
   }

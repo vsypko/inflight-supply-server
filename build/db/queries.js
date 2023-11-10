@@ -1,7 +1,7 @@
 import db from "./db.js";
 export const airportSearchQuery = (search) => ({
     name: "airport",
-    text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name",
+    text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name",
     values: [search],
 });
 export const scheduleFromQuery = (airport, date) => ({
@@ -16,7 +16,7 @@ export const scheduleToQuery = (airport, date) => ({
 });
 export const airportByCodeQuery = (search) => ({
     name: "airportbycode",
-    text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country_name, country, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1",
+    text: "SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1",
     values: [search],
 });
 export const userEmailCheckQuery = (email) => ({
@@ -46,12 +46,12 @@ export const userRemoveUrlQuery = (url) => ({
 });
 export const userByIdQuery = (id) => ({
     name: "user-by-id",
-    text: "SELECT id, firstname, lastname, email, img_url, role_name as role, company_id, phone, country_iso FROM users INNER JOIN roles ON role=role_id WHERE id=$1",
+    text: "SELECT u.id, u.firstname, u.lastname, u.email, u.img_url, r.role_name role, u.company_id, u.phone, u.country_iso, c.title_case country, c.phonecode, c.flag FROM users u INNER JOIN roles r ON role=role_id INNER JOIN countries c ON country_iso=iso WHERE u.id=$1",
     values: [id],
 });
 export const companyByIdQuery = (id) => ({
     name: "country-by-id",
-    text: "SELECT * FROM companies WHERE id=$1",
+    text: "SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.id=$1",
     values: [id],
 });
 export const countryByISOQuery = (country_iso) => ({
@@ -64,7 +64,7 @@ export async function countryByIpQuery(ip) {
         ip = ip.replace("::ffff:", "");
     }
     if (ip.includes("127.0.0.1") || (ip.includes("192.168.") && ip.indexOf("192.168.") === 0)) {
-        return "UA";
+        return "AT";
     }
     if (ip.includes(".")) {
         const country_iso = await db.query(countryByIpv4Query(ip));

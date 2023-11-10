@@ -77,7 +77,7 @@ export async function countryByIpQuery(ip: string): Promise<string> {
     ip = ip.replace("::ffff:", "")
   }
   if (ip.includes("127.0.0.1") || (ip.includes("192.168.") && ip.indexOf("192.168.") === 0)) {
-    return "UA"
+    return "AT"
   }
   if (ip.includes(".")) {
     const country_iso = await db.query(countryByIpv4Query(ip))

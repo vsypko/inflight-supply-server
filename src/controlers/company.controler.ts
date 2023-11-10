@@ -5,6 +5,32 @@ import * as fs from "fs"
 import { countryByISOQuery } from "../db/queries.js"
 import { IFleet, IFlight, ISupply } from "../types.js"
 
+export async function createCompany(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.body) throw { staus: 400, data: "Bad request" }
+    const user_id = req.body.id
+    const user_role = req.body.role
+    let company_id = req.body.company_id
+
+    if ("newCompany" in req.body) {
+      const { category, name, reg_number, country_iso, icao, iata } = req.body.newCompany
+      const result = await db.query(
+        "INSERT INTO companies (category, name, reg_number, country_iso, icao, iata ) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+        [category, name, reg_number, country_iso, icao, iata],
+      )
+      company_id = result.rows[0].id
+    }
+    const result = await db.query(
+      "UPDATE users u SET role=r.role_id, company_id=$1 FROM roles r WHERE r.role_name=$2 AND u.id=$3 RETURNING *",
+      [company_id, user_role, user_id],
+    )
+
+    res.send({ data: "Company updated", company_id })
+  } catch (e) {
+    next(e)
+  }
+}
+
 export async function getCompanies(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
@@ -12,6 +38,20 @@ export async function getCompanies(req: Request, res: Response, next: NextFuncti
       `SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.name ILIKE '%${req.query.q}%' ORDER BY co.name`,
     )
     if (companies) res.send({ total_count: companies.rowCount, companies: companies.rows })
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function getCompaniesForAirport(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const { type, airport } = req.query
+    const result = await db.query(
+      "SELECT c.id, c.name, c.reg_number, c.iata, c.icao, c.country_iso FROM companies c INNER JOIN places p ON c.category=$1 AND c.id=p.company_id AND p.airport_id=$2",
+      [type, airport],
+    )
+    res.send(result.rows)
   } catch (e) {
     next(e)
   }

@@ -1,11 +1,25 @@
 import db from "../db/db.js";
 import * as fs from "fs";
 import { countryByISOQuery } from "../db/queries.js";
+export async function createCompany(req, res, next) {
+    try {
+        if (!req.body)
+            throw { staus: 400, data: "Bad request" };
+        const { category, name, reg_number, country_iso, icao, iata } = req.body.newCompany;
+        let result = await db.query(`INSERT INTO companies (category, name, reg_number, country_iso, icao, iata ) VALUES($1, $2, $3, $4, $5, $6) RETURNING*`, [category, name, reg_number, country_iso, icao, iata]);
+        const id = result.rows[0].id;
+        await db.query("UPDATE users SET company_id=$1 WHERE id=$2", [id, req.body.id]);
+        res.send({ data: "New company added", company_id: id });
+    }
+    catch (e) {
+        next(e);
+    }
+}
 export async function getCompanies(req, res, next) {
     try {
         if (!req.query)
             throw { status: 400, data: "Bad request" };
-        const companies = await db.query(`SELECT * FROM companies WHERE name ILIKE '%${req.query.q}%' ORDER BY name`);
+        const companies = await db.query(`SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.name ILIKE '%${req.query.q}%' ORDER BY co.name`);
         if (companies)
             res.send({ total_count: companies.rowCount, companies: companies.rows });
     }
@@ -47,8 +61,12 @@ export async function getCompanyItems(req, res, next) {
             res.json(result.rows);
             return;
         }
-        const result = await db.query(`SELECT * FROM companies`);
-        res.json(result.rows);
+        if (req.params.type === "places") {
+            const result = await db.query("SELECT p.id, ap.name, ap.iata, ap.municipality, ap.country, ap.country_iso, p.airport_id, p.company_id FROM places p INNER JOIN airports ap ON p.airport_id=ap.id WHERE company_id=$1", [req.query.id]);
+            res.json(result.rows);
+            return;
+        }
+        res.json({ data: "No data found" });
     }
     catch (e) {
         next(e);
@@ -63,18 +81,36 @@ export async function insertCompanyItems(req, res, next) {
         if (!data)
             throw { status: 400, data: "Bad request. File data failure." };
         if (req.params.type === "flights") {
-            result = await db.query(`INSERT INTO flights (date, flight, type, reg, "from", "to", std, sta, seats, co_id, co_iata) VALUES ${data}`);
+            const values = data
+                .map((row) => `('${row.date}'::date, ${row.flight}, '${row.type}', '${row.reg}', '${row.from}', '${row.to}', '${row.std}'::time, '${row.sta}'::time, ${row.seats}, ${row.co_id}, '${row.co_iata}')`)
+                .join(",");
+            result = await db.query(`INSERT INTO flights (date, flight, type, reg, "from", "to", std, sta, seats, co_id, co_iata) VALUES ${values}`);
             res.json({ data: `Inserted ${result.rowCount} rows` });
             return;
         }
         if (req.params.type === "fleet") {
-            result = await db.query(`INSERT INTO fleet (name, type, reg, seats, co_id) VALUES ${data}`);
+            const values = data
+                .map((row) => `('${row.name}', '${row.type}', '${row.reg}', ${row.seats}, ${row.co_id})`)
+                .join(",");
+            result = await db.query(`INSERT INTO fleet (name, type, reg, seats, co_id) VALUES ${values}`);
             res.json({ data: `Inserted ${result.rowCount} rows` });
             return;
         }
         if (req.params.type === "supplies") {
-            result = await db.query(`INSERT INTO supplies (code, title, price, category, area, description, img_url, co_id) VALUES ${data} RETURNING*`);
+            const values = data
+                .map((row) => `(${row.code},'${row.title}', '${row.category}', '${row.area}', '${row.description}', ${row.price}, '${row.co_id}')`)
+                .join(",");
+            result = await db.query(`INSERT INTO supplies (code, title, category, area, description, price, co_id) VALUES ${values} RETURNING*`);
             res.json({ data: `Inserted ${result.rowCount} rows`, id: result.rows[0].id });
+            return;
+        }
+        if (req.params.type === "places") {
+            const values = data[0];
+            result = await db.query("INSERT INTO places (airport_id, company_id) VALUES ($1, $2) RETURNING*", [
+                values.airport_id,
+                values.company_id,
+            ]);
+            res.json({ data: "Inserted place of supply" });
             return;
         }
         res.json({ data: "No data found" });
@@ -109,7 +145,7 @@ export async function updateCompanyItem(req, res, next) {
             if (data.id) {
                 const url = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [data.id]);
                 const oldUrl = url.rows[0].img_url;
-                if (oldUrl && oldUrl !== "undefined")
+                if (oldUrl && oldUrl !== undefined)
                     fs.unlinkSync(`uploads/itm/${oldUrl}`);
             }
             await db.query(`UPDATE supplies SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`, [data.id, data.code, data.title, data.price, data.category, data.area, data.description, data.img_url]);
@@ -131,9 +167,9 @@ export async function deleteCompanyItem(req, res, next) {
         if (!id || !type)
             throw { status: 400, data: "Bad request. Item data failure." };
         if (type === "supplies") {
-            const getImgUrl = await db.query(`SELECT img_url FROM ${type} WHERE id=$1`, [id]);
-            const url = getImgUrl.rows[0].img_url.toString();
-            if (url && url !== "undefined")
+            const data = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [id]);
+            const url = data.rows[0].img_url;
+            if (url && url !== undefined)
                 fs.unlinkSync(`uploads/itm/${url}`);
         }
         await db.query(`DELETE FROM ${type} WHERE id=$1`, [id]);
@@ -159,7 +195,7 @@ export async function getItemImgUrl(req, res, next) {
 export async function updateItemImg(req, res, next) {
     try {
         const id = req.body.id;
-        const type = req.body.type.toString();
+        const type = req.body.type;
         if (!type)
             throw { status: 400, data: "Bad request. Item data failure." };
         const file = req.file;

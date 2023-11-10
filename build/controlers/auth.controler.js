@@ -2,7 +2,7 @@ import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import { generateTokens } from "../services/token.service.js";
 import * as userService from "../services/user.service.js";
-import { userByIdQuery } from "../db/queries.js";
+import { companyByIdQuery, userByIdQuery } from "../db/queries.js";
 import db from "../db/db.js";
 export async function signup(req, res, next) {
     try {
@@ -18,7 +18,7 @@ export async function signup(req, res, next) {
             sameSite: "lax",
         });
         user.token = accessToken;
-        res.json(user);
+        res.json({ user });
     }
     catch (e) {
         next(e);
@@ -32,13 +32,13 @@ export async function signin(req, res, next) {
             if (!err.isEmpty()) {
                 throw { status: 400, data: "Validation Error: Invalid email or password" };
             }
-            const { user, tokens: { refreshToken, accessToken }, } = await userService.signin(email, password);
+            const { user, company, tokens: { refreshToken, accessToken }, } = await userService.signin(email, password);
             res.cookie("rf_tkn", refreshToken, {
                 maxAge: 2592000000,
                 sameSite: "lax",
             });
             user.token = accessToken;
-            res.json(user);
+            res.json({ user, company });
             return;
         }
         const { rf_tkn: updateToken } = req.cookies;
@@ -57,7 +57,12 @@ export async function signin(req, res, next) {
             throw { status: 500, data: "Internal server error.\n Database failure." };
         const user = userData.rows[0];
         user.token = accessToken;
-        res.json(user);
+        let company = undefined;
+        if (user.company_id) {
+            const data = await db.query(companyByIdQuery(user.company_id));
+            company = data.rows[0];
+        }
+        res.json({ user, company });
     }
     catch (e) {
         next(e);

@@ -56,8 +56,6 @@ export async function removeUserPhoto(req: Request, res: Response, next: NextFun
 }
 
 export async function updateUserProfile(req: Request, res: Response, next: NextFunction) {
-  let userData: User
-  let country: Country
   try {
     if (!req.body) throw { status: 400, data: "Bad request. Incorrect data." }
     const userData = await db.query(userUpdateProfileQuery(req.body))

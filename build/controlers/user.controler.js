@@ -52,13 +52,14 @@ export async function updateUserProfile(req, res, next) {
         const userData = await db.query(userUpdateProfileQuery(req.body));
         if (userData.rowCount === 0)
             throw { status: 500, data: "Internal server error.\n Database failure." };
-        const user = await db.query(userByIdQuery(userData.rows[0].id));
+        const data = await db.query(userByIdQuery(userData.rows[0].id));
+        const user = data.rows[0];
         res.json(user);
     }
     catch (e) {
         next(e);
     }
 }
+export async function checkUserAccount(req, res, next) { }
 export async function removeUserProfile(req, res, next) { }
-function getUserById() { }
 //# sourceMappingURL=user.controler.js.map

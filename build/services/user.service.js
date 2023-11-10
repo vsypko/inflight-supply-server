@@ -1,6 +1,6 @@
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
-import { countryByIpQuery, userEmailCheckQuery, userInsertQuery, } from "../db/queries.js";
+import { companyByIdQuery, countryByIpQuery, userByIdQuery, userEmailCheckQuery, userInsertQuery, } from "../db/queries.js";
 import { generateTokens } from "./token.service.js";
 export async function signup(email, password, ip) {
     const checkEmail = await db.query(userEmailCheckQuery(email));
@@ -11,7 +11,8 @@ export async function signup(email, password, ip) {
     const newUser = await db.query(userInsertQuery(email, hashedPassword, country_iso));
     if (newUser.rowCount === 0)
         throw { status: 500, data: "Internal server error" };
-    const user = newUser.rows[0];
+    const data = await db.query(userByIdQuery(newUser.rows[0].id));
+    const user = data.rows[0];
     const tokens = generateTokens({ id: user.id, role: user.role });
     return {
         user,
@@ -25,10 +26,17 @@ export async function signin(email, password) {
     const checkPassword = await bcrypt.compare(password, checkUser.rows[0].password);
     if (!checkPassword)
         throw { status: 400, data: "Incorrect password" };
-    const user = checkUser.rows[0];
+    const data = await db.query(userByIdQuery(checkUser.rows[0].id));
+    const user = data.rows[0];
     const tokens = generateTokens({ id: user.id, role: user.role });
+    let company = undefined;
+    if (user.company_id) {
+        const data = await db.query(companyByIdQuery(user.company_id));
+        company = data.rows[0];
+    }
     return {
         user,
+        company,
         tokens,
     };
 }
