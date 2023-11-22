@@ -8,13 +8,13 @@ export const airportSearchQuery = (search: string) => ({
 
 export const scheduleFromQuery = (airport: string, date: string) => ({
   name: "scheduleFrom",
-  text: `SELECT TO_CHAR(std,'HH24:MI') AS departure, municipality || ' ['|| "to" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "to"=iata WHERE date=$2::date AND "from"=$1 ORDER BY std;`,
+  text: `SELECT TO_CHAR(std::time,'HH24:MI') AS departure, municipality || ' ['|| "to" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "to"=iata WHERE date=$2::date AND "from"=$1 ORDER BY std;`,
   values: [airport, date],
 })
 
 export const scheduleToQuery = (airport: string, date: string) => ({
   name: "scheduleTo",
-  text: `SELECT TO_CHAR(sta,'HH24:MI') AS arrival, municipality || ' ['|| "from" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "from"=iata WHERE date=$2::date AND "to"=$1 ORDER BY std;`,
+  text: `SELECT TO_CHAR(sta::time,'HH24:MI') AS arrival, municipality || ' ['|| "from" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "from"=iata WHERE date=$2::date AND "to"=$1 ORDER BY sta;`,
   values: [airport, date],
 })
 
