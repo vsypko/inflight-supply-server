@@ -1,16 +1,3 @@
-// export interface User {
-//   id: number
-//   firstname: string
-//   lastname: string
-//   email: string
-//   img_url: string
-//   role: string
-//   company: number
-//   phone: string
-//   country: string
-//   token: string
-// }
-
 export interface User {
   id: number
   firstname: string
@@ -133,4 +120,14 @@ export interface IAirportResponse {
 export interface IError {
   status?: number
   data: string
+}
+
+export interface IContract {
+  id: number
+  signed_at: string
+  airline: number
+  supplier: number
+  airport: number
+  airline_signatory: number
+  supplier_signatory: number
 }

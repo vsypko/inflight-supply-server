@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express"
 import db from "../db/db.js"
+import { IContract } from "../types.js"
 
 export async function createContract(req: Request, res: Response, next: NextFunction) {
   try {
@@ -19,9 +20,15 @@ export async function createContract(req: Request, res: Response, next: NextFunc
 export async function getContract(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.query) throw { status: 400, data: "Bad request" }
-    const { ap: airport, ar: airline } = req.query
-    const contracts = await db.query("SELECT * FROM contracts WHERE airport=$1 AND airline=$2", [airport, airline])
-    if (contracts) res.send(contracts.rows[0])
+    const { ap, co, cat } = req.query
+    let result: any
+    if (cat === "airline") {
+      result = await db.query("SELECT * FROM contracts WHERE airport=$1 AND airline=$2", [ap, co])
+    } else {
+      result = await db.query("SELECT * FROM contracts WHERE airport=$1 AND supplier=$2", [ap, co])
+    }
+    const contracts: IContract[] = result.rows
+    if (contracts) res.send(contracts)
   } catch (e) {
     next(e)
   }
