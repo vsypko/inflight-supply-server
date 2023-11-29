@@ -23,9 +23,15 @@ export async function getContract(req: Request, res: Response, next: NextFunctio
     const { ap, co, cat } = req.query
     let result: any
     if (cat === "airline") {
-      result = await db.query("SELECT * FROM contracts WHERE airport=$1 AND airline=$2", [ap, co])
+      result = await db.query(
+        "SELECT ct.*, co.name, co.reg_number, co.country_iso FROM contracts ct INNER JOIN companies co ON ct.supplier = co.id WHERE ct.airport=$1 AND ct.airline=$2",
+        [ap, co],
+      )
     } else {
-      result = await db.query("SELECT * FROM contracts WHERE airport=$1 AND supplier=$2", [ap, co])
+      result = await db.query(
+        "SELECT ct.*, co.name, co.reg_number, co.iata, co.country_iso FROM contracts ct INNER JOIN companies co ON ct.airline = co.id WHERE ct.airport=$1 AND ct.supplier=$2",
+        [ap, co],
+      )
     }
     const contracts: IContract[] = result.rows
     if (contracts) res.send(contracts)
