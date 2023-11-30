@@ -130,4 +130,8 @@ export interface IContract {
   airport: number
   airline_signatory: number
   supplier_signatory: number
+  name: string
+  reg_number: string
+  iata: string
+  country_iso: string
 }
