@@ -86,5 +86,7 @@ companyItemsRouter.delete("/img/:type", company.deleteItemImg)
 //queries for CONTRACT_ROUTER-----------------------------------------------------------------
 contractRouter.get("/", contract.getContract)
 contractRouter.post("/", authMiddleware(2), contract.createContract)
+contractRouter.patch("/", authMiddleware(2), contract.signContract)
+contractRouter.delete("/", authMiddleware(2), contract.rejectContract)
 
 export default router

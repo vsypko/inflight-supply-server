@@ -29,12 +29,39 @@ export async function getContract(req: Request, res: Response, next: NextFunctio
       )
     } else {
       result = await db.query(
-        "SELECT ct.*, co.name, co.reg_number, co.iata, co.country_iso FROM contracts ct INNER JOIN companies co ON ct.airline = co.id WHERE ct.airport=$1 AND ct.supplier=$2",
+        "SELECT ct.id, ct.signed_at, ct.airline, ct.supplier, ct.airport, ct.airline_signatory, ct.supplier_signatory, co.name, co.reg_number, co.iata, co.country_iso FROM contracts ct INNER JOIN companies co ON ct.airline = co.id WHERE ct.airport=$1 AND ct.supplier=$2",
         [ap, co],
       )
     }
     const contracts: IContract[] = result.rows
     if (contracts) res.send(contracts)
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function signContract(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.body) throw { status: 400, data: "Bad request" }
+    const { id, user } = req.body
+    const result = await db.query(
+      "UPDATE contracts SET signed_at=Now(), supplier_signatory=$2 WHERE id=$1 RETURNING *",
+      [id, user],
+    )
+    const contract: IContract = result.rows[0]
+    if (!contract) throw { status: 400, data: "Bad request" }
+    res.send(contract)
+  } catch (e) {
+    next(e)
+  }
+}
+
+export async function rejectContract(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const result = await db.query("DELETE FROM contracts WHERE id=$1", [req.query.q])
+    if (!result.rowCount) throw { status: 400, data: "Bad request" }
+    res.send({ data: "Contract rejected" })
   } catch (e) {
     next(e)
   }
