@@ -88,5 +88,6 @@ contractRouter.get("/", contract.getContract)
 contractRouter.post("/", authMiddleware(2), contract.createContract)
 contractRouter.patch("/", authMiddleware(2), contract.signContract)
 contractRouter.delete("/", authMiddleware(2), contract.rejectContract)
+contractRouter.get("/flights", contract.getScheduledFlights)
 
 export default router

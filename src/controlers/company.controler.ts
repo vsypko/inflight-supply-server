@@ -71,7 +71,8 @@ export async function getCompanyItems(req: Request, res: Response, next: NextFun
   try {
     if (!req.params || !req.query) throw { status: 400, data: "Bad request" }
     if (req.params.type === "flights") {
-      const date = req.query.date!.toString()
+      let date: string = new Date(new Date().toISOString().slice(0, 10)).toString()
+      if (req.query.date) date = req.query.date.toString()
       const result = await db.query(
         `SELECT id, TO_CHAR(date,'YYYY-MM-DD') as date, flight, type, reg, "from", "to", TO_CHAR(std,'HH24:MI') as std, to_char(sta,'HH24:MI') as sta, seats, co_id, co_iata FROM flights WHERE co_id=$1 AND date=$2::date ORDER BY "from" ASC, std ASC`,
         [req.query.id, date],
@@ -129,9 +130,12 @@ export async function insertCompanyItems(req: Request, res: Response, next: Next
 
     if (req.params.type === "fleet") {
       const values = data
-        .map((row: IFleet) => `('${row.name}', '${row.type}', '${row.reg}', ${row.seats}, ${row.co_id})`)
+        .map(
+          (row: IFleet) =>
+            `('${row.name}', '${row.type}', '${row.reg}', ${row.seats}, ${row.fc}, ${row.bc}, ${row.yc}, ${row.co_id})`,
+        )
         .join(",")
-      result = await db.query(`INSERT INTO fleet (name, type, reg, seats, co_id) VALUES ${values}`)
+      result = await db.query(`INSERT INTO fleet (name, type, reg, seats, fc, bc, yc, co_id) VALUES ${values}`)
       res.json({ data: `Inserted ${result.rowCount} rows` })
       return
     }
@@ -181,12 +185,15 @@ export async function updateCompanyItem(req: Request, res: Response, next: NextF
       return
     }
     if (req.params.type === "fleet") {
-      await db.query(`UPDATE fleet SET name=$2, type=$3, reg=$4, seats=$5 WHERE id=$1`, [
+      await db.query(`UPDATE fleet SET name=$2, type=$3, reg=$4, seats=$5, fc=$6, bc=$7, yc=$8 WHERE id=$1`, [
         data.id,
         data.name,
         data.type,
         data.reg,
         data.seats,
+        data.fc,
+        data.bc,
+        data.yc,
       ])
       res.json({ data: "Aircraft has been updated" })
       return

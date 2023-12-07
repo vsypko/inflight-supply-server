@@ -57,6 +57,9 @@ export interface IFleet {
   type: string
   reg: string
   seats: number
+  fc: number
+  bc: number
+  yc: number
   co_id: number
 }
 

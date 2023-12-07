@@ -66,3 +66,22 @@ export async function rejectContract(req: Request, res: Response, next: NextFunc
     next(e)
   }
 }
+
+export async function getScheduledFlights(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.query) throw { status: 400, data: "Bad request" }
+    const airport = req.query.ap
+    const company = req.query.co
+    const date = req.query.dt
+    if (!airport || !company || !date) throw { status: 400, data: "Bad request. No params found." }
+    const result = await db.query('SELECT * FROM flights WHERE "from"=$1 AND co_id=$2 AND date=$3::date', [
+      airport,
+      company,
+      date,
+    ])
+    if (!result.rowCount) throw { status: 400, data: "Bad request" }
+    res.send(result.rows)
+  } catch (e) {
+    next(e)
+  }
+}
