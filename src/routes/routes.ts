@@ -5,6 +5,7 @@ import * as search from "../controlers/search.controler.js"
 import * as user from "../controlers/user.controler.js"
 import * as company from "../controlers/company.controler.js"
 import * as contract from "../controlers/contract.controler.js"
+import * as order from "../controlers/order.controler.js"
 import { authMiddleware } from "../middlewares/middleware.js"
 import multer from "multer"
 
@@ -32,18 +33,20 @@ const countriesRouter = express.Router()
 const companyRouter = express.Router()
 const companyItemsRouter = express.Router()
 const contractRouter = express.Router()
-
-//uses routes ---------------------------------------------------------
-companyRouter.use("/items", companyItemsRouter)
-searchRouter.use("/airport", airportRouter)
-searchRouter.use("/users", authMiddleware(4), usersRouter)
-searchRouter.use("/countries", countriesRouter)
+const orderRouter = express.Router()
 
 //add main routes ------------------------------------------------------------
 router.use("/user", userRouter)
 router.use("/search", searchRouter)
 router.use("/company", companyRouter)
 router.use("/contract", contractRouter)
+router.use("/orders", orderRouter)
+
+//uses routes ---------------------------------------------------------
+companyRouter.use("/items", companyItemsRouter)
+searchRouter.use("/airport", airportRouter)
+searchRouter.use("/users", authMiddleware(4), usersRouter)
+searchRouter.use("/countries", countriesRouter)
 
 //queries for AUTH_ROUTER---------------------------------------------------------------------
 authRouter.post("/signup", body("email").isEmail(), body("password").isLength({ min: 6, max: 12 }), auth.signup)
@@ -89,5 +92,8 @@ contractRouter.post("/", authMiddleware(2), contract.createContract)
 contractRouter.patch("/", authMiddleware(2), contract.signContract)
 contractRouter.delete("/", authMiddleware(2), contract.rejectContract)
 contractRouter.get("/flights", contract.getScheduledFlights)
+
+//queries for ORDER_ROUTER-------------------------------------------------------------------
+orderRouter.get("/", order.getFlights)
 
 export default router

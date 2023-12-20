@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express"
 import db from "../db/db.js"
 import { QueryResult } from "pg"
-import * as fs from "fs"
+import { readFile, rm, access } from "node:fs/promises"
 import { countryByISOQuery } from "../db/queries.js"
 import { IFleet, IFlight, ISupply } from "../types.js"
 
@@ -203,7 +203,7 @@ export async function updateCompanyItem(req: Request, res: Response, next: NextF
       if (data.id) {
         const url = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [data.id])
         const oldUrl = url.rows[0].img_url
-        if (oldUrl && oldUrl !== undefined) fs.unlinkSync(`uploads/itm/${oldUrl}`)
+        if (oldUrl && oldUrl !== undefined) await rm(`uploads/itm/${oldUrl}`)
       }
       await db.query(
         `UPDATE supplies SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`,
@@ -228,7 +228,7 @@ export async function deleteCompanyItem(req: Request, res: Response, next: NextF
     if (type === "supplies") {
       const data = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [id])
       const url = data.rows[0].img_url
-      if (url && url !== undefined) fs.unlinkSync(`uploads/itm/${url}`)
+      if (url && url !== undefined) await rm(`uploads/itm/${url}`)
     }
     await db.query(`DELETE FROM ${type} WHERE id=$1`, [id])
     res.json({ data: "Data row has been deleted" })
@@ -239,8 +239,8 @@ export async function deleteCompanyItem(req: Request, res: Response, next: NextF
 
 export async function getItemImgUrl(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!fs.existsSync(`uploads/itm/${req.params.url}`)) throw { status: 400, data: "Bad request. File load failure." }
-    const image = fs.readFileSync(`uploads/itm/${req.params.url}`)
+    if (!access(`uploads/itm/${req.params.url}`)) throw { status: 400, data: "Bad request. File load failure." }
+    const image = await readFile(`uploads/itm/${req.params.url}`)
     res.setHeader("Content-Type", "image/png")
     res.setHeader("Content-Encoding", "binary")
     res.send(image)
@@ -275,7 +275,7 @@ export async function deleteItemImg(req: Request, res: Response, next: NextFunct
     const url = getImgUrl.rows[0].img_url.toString()
 
     await db.query(`UPDATE ${type} SET img_url='' WHERE id=$1`, [id])
-    fs.unlinkSync(`uploads/itm/${url}`)
+    await rm(`uploads/itm/${url}`)
 
     res.json({ data: "Image removed" })
   } catch (e) {
