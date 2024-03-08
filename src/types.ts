@@ -139,3 +139,10 @@ export interface IContract {
   iata: string
   country_iso: string
 }
+
+export interface IOrderedSupply {
+  item_id: number
+  item_price: number
+  item_qty: number
+  item_section: string
+}
