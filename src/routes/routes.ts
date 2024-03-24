@@ -107,7 +107,9 @@ contractRouter.patch('/', authMiddleware(2), contract.signContract)
 contractRouter.delete('/', authMiddleware(2), contract.rejectContract)
 
 //queries for ORDER_ROUTER-------------------------------------------------------------------
-orderRouter.get('/', order.getFlights)
+orderRouter.get('/flights', order.getFlights)
+orderRouter.get('/', order.getOrder)
 orderRouter.post('/', order.setOrder)
+orderRouter.delete('/', order.deleteOrder)
 
 export default router

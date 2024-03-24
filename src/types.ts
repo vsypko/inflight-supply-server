@@ -140,7 +140,7 @@ export interface IContract {
   country_iso: string
 }
 
-export interface IOrderedSupply {
+export interface Item {
   item_id: number
   item_price: number
   item_qty: number
