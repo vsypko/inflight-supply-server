@@ -68,6 +68,7 @@ export async function setOrder(
     await db.query('UPDATE flights SET ordered=true WHERE id=ANY($1)', [
       flights,
     ])
+    await db.query('DELETE FROM items WHERE flight_id=ANY($1)', [flights])
 
     await flights.forEach(async (flight: number) => {
       const values = items
@@ -78,7 +79,7 @@ export async function setOrder(
         .join(',')
 
       await db.query(
-        `INSERT INTO items(flight_id, item_id, item_price, item_qty, section) VALUES ${values} ON CONFLICT (flight_id, item_id, section) DO UPDATE SET item_qty = EXCLUDED.item_qty, item_price=EXCLUDED.item_price`
+        `INSERT INTO items(flight_id, item_id, item_price, item_qty, section) VALUES ${values}`
       )
     })
 
