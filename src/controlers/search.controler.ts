@@ -1,61 +1,101 @@
-import { Request, Response, NextFunction } from "express"
-import { ISchedule } from "../types.js"
+import { Request, Response, NextFunction } from 'express'
+import { ISchedule } from '../types.js'
 
-import db from "../db/db.js"
-import {
-  airportByCodeQuery,
-  allCountriesQuery,
-  allUsersQuery,
-  scheduleFromQuery,
-  scheduleToQuery,
-  airportSearchQuery,
-} from "../db/queries.js"
+import db from '../db/db.js'
 
-export async function getAirport(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getAirport(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
-    const airports = await db.query(airportSearchQuery(`${req.query.q}:*`))
-    if (airports) res.send({ total_count: airports.rowCount, airports: airports.rows })
+    const text =
+      'SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE ts_ap @@ to_tsquery($1) order by name'
+    const values = [`${req.query.q}:*`]
+
+    const airports = await db.query(text, values)
+    if (airports)
+      res.send({ total_count: airports.rowCount, airports: airports.rows })
   } catch (e) {
     next(e)
   }
 }
 
-export async function getAirportbyCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getAirportbyCode(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
-    const airports = await db.query(airportByCodeQuery(req.query.q as string))
-    if (airports) res.send({ total_count: airports.rowCount, airports: airports.rows })
+    const text =
+      'SELECT id, type_ap, name, latitude, longitude, elevation_ft, continent, country, country_iso, iso_region, municipality, scheduled, icao, iata, home_link FROM airports WHERE iata=$1'
+    const values = [req.query.q]
+
+    const airports = await db.query(text, values)
+    if (airports)
+      res.send({ total_count: airports.rowCount, airports: airports.rows })
   } catch (e) {
     next(e)
   }
 }
 
-export async function getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getAllUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
-    const { column, value } = req.query
-    const users = await db.query(allUsersQuery(column as string, Number(value)))
+    // const { column, value } = req.query
+    const users = await db.query(
+      'SELECT id, firstname, lastname, email, img_url, role_name as role, company_id, phone, country_iso FROM users INNER JOIN roles ON role=role_id'
+    )
     if (users) res.send({ total_count: users.rowCount, users: users.rows })
   } catch (e) {
     next(e)
   }
 }
 
-export async function getAllCountries(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getAllCountries(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
-    const countries = await db.query(allCountriesQuery())
+    const text =
+      'SELECT iso, title_case, phonecode, currency, flag FROM countries ORDER BY title_case'
+
+    const countries = await db.query(text)
     if (countries) res.json(countries.rows)
   } catch (e) {
     next(e)
   }
 }
 
-export async function getSchedule(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getSchedule(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const airport = req.query.airport?.toString()
     const date = req.query.date?.toString()
-    if (!airport || !date) throw { status: 400, data: "Bad request. No params found." }
-    const scheduleFrom = await db.query(scheduleFromQuery(airport, date))
-    const scheduleTo = await db.query(scheduleToQuery(airport, date))
-    const schedule = { scheduleFrom: [] as ISchedule[], scheduleTo: [] as ISchedule[] }
+
+    if (!airport || !date)
+      throw { status: 400, data: 'Bad request. No params found.' }
+
+    const textFrom = `SELECT TO_CHAR(std::time,'HH24:MI') AS departure, municipality || ' ['|| "to" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "to"=iata WHERE date=$2::date AND "from"=$1 ORDER BY std`
+    const valuesFrom = [airport, date]
+
+    const scheduleFrom = await db.query(textFrom, valuesFrom)
+
+    const textTo = `SELECT TO_CHAR(sta::time,'HH24:MI') AS arrival, municipality || ' ['|| "from" ||']' AS destination, co_iata ||' '|| flight || ' [' || type || ']' AS flight FROM flights INNER JOIN airports ON "from"=iata WHERE date=$2::date AND "to"=$1 ORDER BY sta`
+    const valuesTo = [airport, date]
+    const scheduleTo = await db.query(textTo, valuesTo)
+
+    const schedule = {
+      scheduleFrom: [] as ISchedule[],
+      scheduleTo: [] as ISchedule[],
+    }
     if (scheduleFrom) schedule.scheduleFrom = scheduleFrom.rows
     if (scheduleTo) schedule.scheduleTo = scheduleTo.rows
     res.send(schedule)

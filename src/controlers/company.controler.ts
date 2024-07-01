@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express'
 import db from '../db/db.js'
 import { QueryResult } from 'pg'
 import { readFile, rm, access } from 'node:fs/promises'
-import { countryByISOQuery } from '../db/queries.js'
 import { IFleet, IFlight, ISupply } from '../types.js'
 
 export async function createCompany(
@@ -79,7 +78,9 @@ export async function getCompanyCountry(
   try {
     if (!req.query || typeof req.query.q != 'string')
       throw { status: 400, data: 'Bad request' }
-    const country = await db.query(countryByISOQuery(req.query.q))
+    const country = await db.query('SELECT * FROM countries WHERE iso=$1', [
+      req.query.q,
+    ])
     if (country) res.send(country.rows[0])
   } catch (e) {
     next(e)
