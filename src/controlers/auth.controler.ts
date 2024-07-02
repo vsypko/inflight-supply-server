@@ -1,19 +1,22 @@
-import { Request, Response, NextFunction } from "express"
-import { validationResult } from "express-validator"
-import jwt from "jsonwebtoken"
-import { generateTokens } from "../services/token.service.js"
-import * as userService from "../services/user.service.js"
-import { companyByIdQuery, userByIdQuery } from "../db/queries.js"
-import db from "../db/db.js"
-import { Company } from "../types.js"
+import { Request, Response, NextFunction } from 'express'
+import { validationResult } from 'express-validator'
+import jwt from 'jsonwebtoken'
+import { generateTokens } from '../services/token.service.js'
+import * as userService from '../services/user.service.js'
+import { companyByIdQuery, userByIdQuery } from '../db/queries.js'
+import db from '../db/db.js'
 
 //-------User Sign Up Function-------------------------------------------------------------------------------
 
-export async function signup(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function signup(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const err = validationResult(req)
     if (!err.isEmpty()) {
-      throw { status: 400, data: "Validation Error: Invalid email or password" }
+      throw { status: 400, data: 'Validation Error: Invalid email or password' }
     }
     const { email, password } = req.body
     const ip = req.ip
@@ -22,11 +25,11 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
       tokens: { refreshToken, accessToken },
     } = await userService.signup(email, password, ip)
 
-    res.cookie("rf_tkn", refreshToken, {
+    res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
-      sameSite: "lax",
-      // secure: true,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
     })
     user.token = accessToken
     res.json({ user })
@@ -37,7 +40,11 @@ export async function signup(req: Request, res: Response, next: NextFunction): P
 
 //-------User Sign In Function--------------------------------------------------------------------------
 
-export async function signin(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function signin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const { email, password } = req.body
 
@@ -45,7 +52,10 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
       const err = validationResult(req)
 
       if (!err.isEmpty()) {
-        throw { status: 400, data: "Validation Error: Invalid email or password" }
+        throw {
+          status: 400,
+          data: 'Validation Error: Invalid email or password',
+        }
       }
 
       const {
@@ -54,11 +64,11 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
         tokens: { refreshToken, accessToken },
       } = await userService.signin(email, password)
 
-      res.cookie("rf_tkn", refreshToken, {
+      res.cookie('rf_tkn', refreshToken, {
         maxAge: 2592000000,
-        // httpOnly: true,
-        sameSite: "lax",
-        // secure: true,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: true,
       })
       user.token = accessToken
       res.json({ user, company })
@@ -66,21 +76,28 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
     }
     //----User Auto Sign In By Token--------------------------------------------------------------------
     const { rf_tkn: updateToken } = req.cookies
-    if (!updateToken) throw { status: 401, data: "Unauthorized request" }
-    const tokenData = jwt.verify(updateToken, process.env.JWT_REFRESH_SECRET as jwt.Secret) as {
+    if (!updateToken) throw { status: 401, data: 'Unauthorized request' }
+    const tokenData = jwt.verify(
+      updateToken,
+      process.env.JWT_REFRESH_SECRET as jwt.Secret
+    ) as {
       id: number
       role: number
     }
-    if (!tokenData) throw { status: 401, data: "Unauthorized request" }
-    const { refreshToken, accessToken } = generateTokens({ id: tokenData.id, role: tokenData.role })
-    res.cookie("rf_tkn", refreshToken, {
+    if (!tokenData) throw { status: 401, data: 'Unauthorized request' }
+    const { refreshToken, accessToken } = generateTokens({
+      id: tokenData.id,
+      role: tokenData.role,
+    })
+    res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
-      sameSite: "lax",
-      // secure: true,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
     })
     const userData = await db.query(userByIdQuery(tokenData.id))
-    if (userData.rowCount === 0) throw { status: 500, data: "Internal server error.\n Database failure." }
+    if (userData.rowCount === 0)
+      throw { status: 500, data: 'Internal server error.\n Database failure.' }
     const user = userData.rows[0]
     user.token = accessToken
     let company = undefined
@@ -96,23 +113,33 @@ export async function signin(req: Request, res: Response, next: NextFunction): P
 
 //---Update Access and Refresh Tockens Function------------------------------------------------------------
 
-export function tokenUpdate(req: Request, res: Response, next: NextFunction): void {
+export function tokenUpdate(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   try {
     const { rf_tkn: updateToken } = req.cookies
-    if (!updateToken) throw { status: 401, data: "Unauthorized request" }
+    if (!updateToken) throw { status: 401, data: 'Unauthorized request' }
 
-    const tokenData = jwt.verify(updateToken, process.env.JWT_REFRESH_SECRET as jwt.Secret) as {
+    const tokenData = jwt.verify(
+      updateToken,
+      process.env.JWT_REFRESH_SECRET as jwt.Secret
+    ) as {
       id: number
       role: number
     }
-    if (!tokenData) throw { status: 401, data: "Unauthorized request" }
-    const { refreshToken, accessToken } = generateTokens({ id: tokenData.id, role: tokenData.role })
+    if (!tokenData) throw { status: 401, data: 'Unauthorized request' }
+    const { refreshToken, accessToken } = generateTokens({
+      id: tokenData.id,
+      role: tokenData.role,
+    })
 
-    res.cookie("rf_tkn", refreshToken, {
+    res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
-      sameSite: "lax",
-      // secure: true,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
     })
     res.json(accessToken)
   } catch (e) {
@@ -124,7 +151,7 @@ export function tokenUpdate(req: Request, res: Response, next: NextFunction): vo
 
 export function signout(req: Request, res: Response, next: NextFunction): void {
   try {
-    res.clearCookie("rf_tkn")
+    res.clearCookie('rf_tkn')
     res.end()
   } catch (e) {
     next(e)

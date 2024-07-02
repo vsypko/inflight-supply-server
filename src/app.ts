@@ -13,7 +13,7 @@ const port = Number(process.env.PORT) || 3001
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL1 as string, 'http://localhost:5000'],
+    origin: process.env.CLIENT_URL1,
     credentials: true,
   })
 )
@@ -22,7 +22,7 @@ app.use(cookieParser())
 app.use('/api', router)
 app.use(errorMiddleware)
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello world!')
+  res.send('Hello there!')
 })
 
 app.listen(port, () =>
