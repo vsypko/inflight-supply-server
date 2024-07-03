@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import db from '../db/db.js'
 import { QueryResult } from 'pg'
-import { readFile, rm, access } from 'node:fs/promises'
+import { readFile, unlink, access } from 'node:fs/promises'
 import { IFleet, IFlight, ISupply } from '../types.js'
 
 export async function createCompany(
@@ -94,6 +94,7 @@ export async function getCompanyItems(
 ) {
   try {
     if (!req.params || !req.query) throw { status: 400, data: 'Bad request' }
+
     if (req.params.type === 'flights') {
       let date: string = new Date(
         new Date().toISOString().slice(0, 10)
@@ -106,6 +107,7 @@ export async function getCompanyItems(
       res.json(result.rows)
       return
     }
+
     if (req.params.type === 'fleet') {
       const result = await db.query(
         `SELECT * FROM fleet WHERE co_id=$1 ORDER BY reg`,
@@ -149,6 +151,7 @@ export async function insertCompanyItems(
     const data = req.body.values
     if (!data) throw { status: 400, data: 'Bad request. File data failure.' }
 
+    //insert flight/s------------------------------------------------------------------------------------
     if (req.params.type === 'flights') {
       const values = data
         .map(
@@ -163,6 +166,7 @@ export async function insertCompanyItems(
       return
     }
 
+    //insert aircraft / fleet scheet ------------------------------------------------------------------------------------
     if (req.params.type === 'fleet') {
       const values = data
         .map(
@@ -177,6 +181,7 @@ export async function insertCompanyItems(
       return
     }
 
+    //insert supply/ies ----------------------------------------------------------------------------------------------------
     if (req.params.type === 'supplies') {
       const values = data
         .map(
@@ -195,6 +200,7 @@ export async function insertCompanyItems(
       return
     }
 
+    //insert places of service ------------------------------------------------------------------------------------
     if (req.params.type === 'places') {
       const values = data[0]
       result = await db.query(
@@ -220,6 +226,9 @@ export async function updateCompanyItem(
   if (!req.params) throw { status: 400, data: 'Bad request. No params found.' }
   try {
     const data = req.body.value
+
+    //update flight data-----------------------------------------------------------------------
+
     if (req.params.type === 'flights') {
       await db.query(
         `UPDATE flights SET date=$2::date, flight=$3, type=$4, reg=$5, "from"=$6, "to"=$7, std=$8, sta=$9, seats=$10 WHERE id=$1`,
@@ -239,6 +248,8 @@ export async function updateCompanyItem(
       res.json({ data: 'Flight has been updated' })
       return
     }
+
+    //update fleet data ------------------------------------------------------------------
     if (req.params.type === 'fleet') {
       await db.query(
         `UPDATE fleet SET name=$2, type=$3, reg=$4, seats=$5, crew=$6, fc=$7, bc=$8, yc=$9 WHERE id=$1`,
@@ -257,14 +268,20 @@ export async function updateCompanyItem(
       res.json({ data: 'Aircraft has been updated' })
       return
     }
+
+    //update supply data-------------------------------------------------------
+
     if (req.params.type === 'supplies') {
-      //get old image file url if exists and delete it ----------------------------------------------------------
+      //get old image file url if exists and delete it
+
       if (data.id) {
-        const url = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [
-          data.id,
-        ])
-        const oldUrl = url.rows[0].img_url
-        if (oldUrl && oldUrl !== undefined) await rm(`uploads/itm/${oldUrl}`)
+        const result = await db.query(
+          `SELECT img_url FROM supplies WHERE id=$1`,
+          [data.id]
+        )
+        const filePath = `uploads/itm/${result.rows[0].img_url}`
+        await access(filePath)
+        await unlink(filePath)
       }
       await db.query(
         `UPDATE supplies SET code=$2, title=$3, price=$4, category=$5, area=$6, description=$7, img_url=$8 WHERE id=$1`,
@@ -302,11 +319,13 @@ export async function deleteCompanyItem(
       throw { status: 400, data: 'Bad request. Item data failure.' }
 
     if (type === 'supplies') {
-      const data = await db.query(`SELECT img_url FROM supplies WHERE id=$1`, [
-        id,
-      ])
-      const url = data.rows[0].img_url
-      if (url && url !== undefined) await rm(`uploads/itm/${url}`)
+      const result = await db.query(
+        `SELECT img_url FROM supplies WHERE id=$1`,
+        [id]
+      )
+      const filePath = `uploads/itm/${result.rows[0].img_url}`
+      await access(filePath)
+      await unlink(filePath)
     }
     await db.query(`DELETE FROM ${type} WHERE id=$1`, [id])
     res.json({ data: 'Data row has been deleted' })
@@ -321,8 +340,8 @@ export async function getItemImgUrl(
   next: NextFunction
 ) {
   try {
-    if (!access(`uploads/itm/${req.params.url}`))
-      throw { status: 400, data: 'Bad request. File load failure.' }
+    const filePath = `uploads/itm/${req.params.url}`
+    await access(filePath)
     const image = await readFile(`uploads/itm/${req.params.url}`)
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Content-Encoding', 'binary')
@@ -366,15 +385,14 @@ export async function deleteItemImg(
   try {
     const type = req.params.type.toString()
     const id = Number(req.query.id)
-    const getImgUrl = await db.query(
-      `SELECT img_url FROM ${type} WHERE id=$1`,
-      [id]
-    )
-    const url = getImgUrl.rows[0].img_url.toString()
+    const result = await db.query(`SELECT img_url FROM ${type} WHERE id=$1`, [
+      id,
+    ])
+    const filePath = `uploads/itm/${result.rows[0].img_url}`
 
     await db.query(`UPDATE ${type} SET img_url='' WHERE id=$1`, [id])
-    await rm(`uploads/itm/${url}`)
-
+    access(filePath)
+    unlink(filePath)
     res.json({ data: 'Image removed' })
   } catch (e) {
     next(e)

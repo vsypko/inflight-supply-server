@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import db from '../db/db.js'
-import * as fs from 'fs'
+import { readFile, access, unlink } from 'node:fs/promises'
 import { User } from '../types.js'
 
 export async function getUserPhoto(
@@ -9,14 +9,18 @@ export async function getUserPhoto(
   next: NextFunction
 ) {
   try {
-    if (!fs.existsSync(`uploads/uph/${req.params.url}`))
-      throw { status: 400, data: 'Bad request. File load failure.' }
-    const image = fs.readFileSync(`uploads/uph/${req.params.url}`)
+    const filePath = `uploads/uph/${req.params.url}`
+    await access(filePath)
+    const image = await readFile(filePath)
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Content-Encoding', 'binary')
     res.send(image)
-  } catch (e) {
-    next(e)
+  } catch (e: any) {
+    if (e.code === 'ENOENT') {
+      res.status(404).json({ message: 'File not found.' })
+    } else {
+      next(e)
+    }
   }
 }
 
@@ -27,13 +31,16 @@ export async function saveUserPhoto(
 ) {
   try {
     const id = req.body.id
-    if (!id) throw { status: 400, data: 'Bad request. User data failure.' }
-    //get old image file url and delete it ----------------------------------------------------------
-    const url = await db.query('SELECT img_url FROM users WHERE id=$1', [id])
-    const oldUrl = url.rows[0].usr_url
-    if (oldUrl) fs.unlinkSync(`uploads/uph/${oldUrl}`)
+    // if (!id) throw { status: 400, data: 'Bad request. User data failure.' }
+    // //get old image file url and delete it ----------------------------------------------------------
+    // const result = await db.query('SELECT img_url FROM users WHERE id=$1', [id])
+    // const filePathToDelete = `uploads/uph/${result.rows[0].usr_url}`
+    // console.log(result.rows[0])
 
-    //save file with new file name --------------------------------------------------------------------
+    // await access(filePathToDelete)
+    // await unlink(filePathToDelete)
+
+    // //save file with new file name --------------------------------------------------------------------
     const file = req.file
     if (!file) throw { status: 400, data: 'Bad request. File upload failure.' }
     await db.query('UPDATE users SET img_url=$2 WHERE id=$1', [
@@ -56,7 +63,9 @@ export async function removeUserPhoto(
     await db.query("UPDATE users SET img_url='' WHERE img_url=$1", [
       req.params.url,
     ])
-    fs.unlinkSync(`uploads/uph/${req.params.url}`)
+    const filePath = `uploads/uph/${req.params.url}`
+    await access(filePath)
+    await unlink(filePath)
     res.json({ data: 'Photo deleted successfully' })
   } catch (e) {
     next(e)

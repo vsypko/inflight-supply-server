@@ -27,9 +27,9 @@ export async function signup(
 
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
+      // httpOnly: true,
       sameSite: 'lax',
-      secure: true,
+      // secure: true,
     })
     user.token = accessToken
     res.json({ user })
@@ -66,9 +66,9 @@ export async function signin(
 
       res.cookie('rf_tkn', refreshToken, {
         maxAge: 2592000000,
-        httpOnly: true,
+        // httpOnly: true,
         sameSite: 'lax',
-        secure: true,
+        // secure: true,
       })
       user.token = accessToken
       res.json({ user, company })
@@ -91,19 +91,25 @@ export async function signin(
     })
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
+      // httpOnly: true,
       sameSite: 'lax',
-      secure: true,
+      // secure: true,
     })
-    const userData = await db.query(userByIdQuery(tokenData.id))
-    if (userData.rowCount === 0)
+    const resultUser = await db.query(
+      'SELECT u.id, u.firstname, u.lastname, u.email, u.img_url, r.role_name role, u.company_id, u.phone, u.country_iso, c.title_case country, c.phonecode, c.flag FROM users u INNER JOIN roles r ON role=role_id INNER JOIN countries c ON country_iso=iso WHERE u.id=$1',
+      [tokenData.id]
+    )
+    if (resultUser.rowCount === 0)
       throw { status: 500, data: 'Internal server error.\n Database failure.' }
-    const user = userData.rows[0]
+    const user = resultUser.rows[0]
     user.token = accessToken
     let company = undefined
     if (user.company_id) {
-      const data = await db.query(companyByIdQuery(user.company_id))
-      company = data.rows[0]
+      const resultCompany = await db.query(
+        'SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.id=$1',
+        [user.company_id]
+      )
+      company = resultCompany.rows[0]
     }
     res.json({ user, company })
   } catch (e) {
@@ -137,9 +143,9 @@ export function tokenUpdate(
 
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      httpOnly: true,
+      // httpOnly: true,
       sameSite: 'lax',
-      secure: true,
+      // secure: true,
     })
     res.json(accessToken)
   } catch (e) {
