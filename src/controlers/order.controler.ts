@@ -2,14 +2,17 @@ import { Request, Response, NextFunction } from 'express'
 import db from '../db/db.js'
 import { Item } from '../types.js'
 
+// FLIGHTS RETURN FUNCTION FOR ORDER PURPOSE -----------------------------------------------------
+
 export async function getFlights(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    if (!req.query) throw { status: 400, data: 'Bad request' }
     const { ap, co, dtf, dtt } = req.query
+
+    if (!ap || !co || !dtf || !dtt) throw { status: 400, data: 'Bad request' }
 
     const flights = await db.query(
       `SELECT fl.id, TO_CHAR(fl.date,'YYYY-MM-DD') as date, fl.flight, fl.type, fl.reg, fl.from, fl.to, TO_CHAR(fl.std,'HH24:MI') as std, to_char(fl.sta,'HH24:MI') as sta, fl.seats, fl.co_id, fl.co_iata, ft.crew, ft.fc, ft.bc, ft.yc, fl.ordered FROM flights fl INNER JOIN fleet ft ON POSITION(fl.reg IN ft.reg)<>0 WHERE fl.date BETWEEN $3::date AND $4::date AND fl.from=$1 AND fl.co_id=$2 ORDER BY fl.date ASC, fl.std ASC`,
@@ -21,14 +24,18 @@ export async function getFlights(
   }
 }
 
+//RETURN CERTAIN ORDER FUNCTION ---------------------------------------------------------
+
 export async function getOrder(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    if (!req.query) throw { status: 400, data: 'Bad request' }
     const { q: id } = req.query
+
+    if (!id) throw { status: 400, data: 'Bad request.' }
+
     let result = await db.query(
       'SELECT i.id as order_id, i.item_price, i.item_qty, i.section, s.id, s.code, s.title, s.price, s.category, s.area, s.description, s.img_url, s.co_id FROM items i INNER JOIN supplies s ON i.item_id = s.id WHERE i.flight_id=$1',
       [id]
@@ -56,21 +63,23 @@ export async function getOrder(
   }
 }
 
+//SET ORDER FUNCTION -----------------------------------------------------------
+
 export async function setOrder(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    if (!req.body) throw { status: 400, data: 'Bad request' }
     const { flights, items } = req.body
+    if (!flights || !items) throw { status: 400, data: 'Bad request' }
 
     await db.query('UPDATE flights SET ordered=true WHERE id=ANY($1)', [
       flights,
     ])
     await db.query('DELETE FROM items WHERE flight_id=ANY($1)', [flights])
 
-    await flights.forEach(async (flight: number) => {
+    const insertQueries = flights.map((flight: number) => {
       const values = items
         .map(
           (row: Item) =>
@@ -78,10 +87,12 @@ export async function setOrder(
         )
         .join(',')
 
-      await db.query(
+      return db.query(
         `INSERT INTO items(flight_id, item_id, item_price, item_qty, section) VALUES ${values}`
       )
     })
+
+    await Promise.all(insertQueries)
 
     res.send({ data: 'Orders inserted' })
   } catch (e) {
@@ -89,34 +100,27 @@ export async function setOrder(
   }
 }
 
+//DELETE ORDER FUNCTION -----------------------------------------------------------
+
 export async function deleteOrder(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    if (!req.body) throw { status: 400, data: 'Bad request' }
     const { ids } = req.body
+    if (!ids) throw { status: 400, data: 'Bad request' }
+
     await db.query('UPDATE flights SET ordered=false WHERE id=ANY($1)', [ids])
-    await ids.forEach(async (id: number) => {
-      await db.query('DELETE FROM items WHERE flight_id=$1', [id])
-    })
+
+    const deleteQueries = ids.map((id: number) =>
+      db.query('DELETE FROM items WHERE flight_id=$1', [id])
+    )
+
+    await Promise.all(deleteQueries)
+
     res.send({ data: 'Orders deleted' })
   } catch (e) {
     next(e)
   }
 }
-
-// async function removeOldOrder(flights: number[]) {
-//   const flightsId = await db.query('SELECT id FROM flights WHERE id IN $1', [])
-//   console.log(orderId)
-
-//   const flightsIdOrdered = flightsId.rows.filter((id) =>
-//     flights.some((el) => el === id)
-//   )
-//   console.log(flights.length, flightsIdOrdered.length)
-
-//   if (flights.length === flightsIdOrdered.length) {
-//     await db.query('DELETE FROM orders WHERE id = $1', [orderId])
-//   }
-// }

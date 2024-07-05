@@ -3,7 +3,6 @@ import { validationResult } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import { generateTokens } from '../services/token.service.js'
 import * as userService from '../services/user.service.js'
-import { companyByIdQuery, userByIdQuery } from '../db/queries.js'
 import db from '../db/db.js'
 
 //-------User Sign Up Function-------------------------------------------------------------------------------
@@ -27,9 +26,9 @@ export async function signup(
 
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
+      httpOnly: true,
       sameSite: 'lax',
-      // secure: true,
+      secure: true,
     })
     user.token = accessToken
     res.json({ user })
@@ -66,17 +65,23 @@ export async function signin(
 
       res.cookie('rf_tkn', refreshToken, {
         maxAge: 2592000000,
-        // httpOnly: true,
+        httpOnly: true,
         sameSite: 'lax',
-        // secure: true,
+        secure: true,
       })
+
       user.token = accessToken
       res.json({ user, company })
+
       return
     }
+
     //----User Auto Sign In By Token--------------------------------------------------------------------
+
     const { rf_tkn: updateToken } = req.cookies
+
     if (!updateToken) throw { status: 401, data: 'Unauthorized request' }
+
     const tokenData = jwt.verify(
       updateToken,
       process.env.JWT_REFRESH_SECRET as jwt.Secret
@@ -84,33 +89,41 @@ export async function signin(
       id: number
       role: number
     }
+
     if (!tokenData) throw { status: 401, data: 'Unauthorized request' }
+
     const { refreshToken, accessToken } = generateTokens({
       id: tokenData.id,
       role: tokenData.role,
     })
+
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
+      httpOnly: true,
       sameSite: 'lax',
-      // secure: true,
+      secure: true,
     })
+
     const resultUser = await db.query(
       'SELECT u.id, u.firstname, u.lastname, u.email, u.img_url, r.role_name role, u.company_id, u.phone, u.country_iso, c.title_case country, c.phonecode, c.flag FROM users u INNER JOIN roles r ON role=role_id INNER JOIN countries c ON country_iso=iso WHERE u.id=$1',
       [tokenData.id]
     )
+
     if (resultUser.rowCount === 0)
       throw { status: 500, data: 'Internal server error.\n Database failure.' }
+
     const user = resultUser.rows[0]
     user.token = accessToken
     let company = undefined
+
     if (user.company_id) {
-      const resultCompany = await db.query(
+      const result = await db.query(
         'SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.id=$1',
         [user.company_id]
       )
-      company = resultCompany.rows[0]
+      company = result.rows[0]
     }
+
     res.json({ user, company })
   } catch (e) {
     next(e)
@@ -126,6 +139,7 @@ export function tokenUpdate(
 ): void {
   try {
     const { rf_tkn: updateToken } = req.cookies
+
     if (!updateToken) throw { status: 401, data: 'Unauthorized request' }
 
     const tokenData = jwt.verify(
@@ -135,7 +149,9 @@ export function tokenUpdate(
       id: number
       role: number
     }
+
     if (!tokenData) throw { status: 401, data: 'Unauthorized request' }
+
     const { refreshToken, accessToken } = generateTokens({
       id: tokenData.id,
       role: tokenData.role,
@@ -143,10 +159,11 @@ export function tokenUpdate(
 
     res.cookie('rf_tkn', refreshToken, {
       maxAge: 2592000000,
-      // httpOnly: true,
+      httpOnly: true,
       sameSite: 'lax',
-      // secure: true,
+      secure: true,
     })
+
     res.json(accessToken)
   } catch (e) {
     next(e)

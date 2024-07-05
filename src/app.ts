@@ -11,8 +11,6 @@ dotenv.config()
 const app = express()
 const port = Number(process.env.PORT) || 3001
 
-// app.use(cors())
-// const allowlist: string[] = [process.env.CLIENT_URL1!, process.env.CLIENT_URL2!]
 app.use(
   cors({
     origin: process.env.CLIENT_URL1 as string,
