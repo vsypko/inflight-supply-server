@@ -55,6 +55,11 @@ export interface ISupply {
   co_id: number
 }
 
+export interface ITokens {
+  accessToken: string
+  refreshToken: string
+}
+
 export interface IContract {
   id: number
   signed_at: string
