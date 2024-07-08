@@ -66,7 +66,7 @@ export async function getCompanies(
   next: NextFunction
 ) {
   try {
-    if (!req.query) throw { status: 400, data: 'Bad request' }
+    if (!req.query.q) throw { status: 400, data: 'Bad request' }
     const companies = await db.query(
       `SELECT co.id, co.category, co.name, co.reg_number, co.icao, co.iata, co.country_iso, cn.title_case country, co.city, co.address, co.link, cn.currency, cn.flag FROM companies co INNER JOIN countries cn ON country_iso=iso WHERE co.name ILIKE '%${req.query.q}%' ORDER BY co.name`
     )
@@ -85,13 +85,38 @@ export async function getCompaniesForAirport(
   next: NextFunction
 ) {
   try {
-    if (!req.query) throw { status: 400, data: 'Bad request' }
     const { type, airport } = req.query
-    const result = await db.query(
-      'SELECT c.id, c.name, c.reg_number, c.iata, c.icao, c.country_iso FROM companies c INNER JOIN places p ON c.category=$1 AND c.id=p.company_id AND p.airport_id=$2',
-      [type, airport]
+    if (!type || !airport)
+      throw { status: 400, data: 'Bad request.Incorrect query data' }
+
+    if (type === 'supplier') {
+      const result = await db.query(
+        'SELECT * FROM companies c INNER JOIN places p ON c.category=$1 AND c.id=p.company_id AND p.airport_id=$2',
+        [type, airport]
+      )
+      res.send(result.rows)
+      return
+    }
+
+    const flights = await db.query(
+      'SELECT co_id from flights WHERE "from"=$1 OR "to"=$1',
+      [airport]
     )
-    res.send(result.rows)
+
+    if (flights.rowCount !== 0) {
+      const flightsDestinations = flights.rows.map((flight) => flight.co_id)
+      const airlines = flightsDestinations.filter(
+        (item, index) => flightsDestinations.indexOf(item) === index
+      )
+
+      const result = await db.query(
+        'SELECT * FROM companies WHERE id=ANY($1)',
+        [airlines]
+      )
+
+      res.send(result.rows)
+      return
+    }
   } catch (e) {
     next(e)
   }
