@@ -60,7 +60,7 @@ export async function getAllUsers(
 ): Promise<void> {
   try {
     const users = await db.query(
-      'SELECT id, firstname, lastname, email, img_url, role_name as role, company_id, phone, country_iso FROM users INNER JOIN roles ON role=role_id'
+      'SELECT u.id, u.firstname, u.lastname, u.email, u.img_url, r.role_name as role, u.company_id, u.phone, u.country_iso FROM users u INNER JOIN roles r ON u.role=r.role_id'
     )
 
     if (users) res.send({ total_count: users.rowCount, users: users.rows })
