@@ -20,8 +20,12 @@ const imgFileStorageConfig = (path: string) =>
   })
 
 //main routs-------------------------------------------------
-const userImgUpload = multer({ storage: imgFileStorageConfig('uploads/uph') })
-const itemImgUpload = multer({ storage: imgFileStorageConfig('uploads/itm') })
+const userImgUpload = multer({
+  storage: imgFileStorageConfig('/usr/uploads/uph'),
+})
+const itemImgUpload = multer({
+  storage: imgFileStorageConfig('/usr/uploads/itm'),
+})
 const router = express.Router()
 
 const searchRouter = express.Router()
