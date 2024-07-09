@@ -10,7 +10,7 @@ export async function getUserPhoto(
   next: NextFunction
 ) {
   try {
-    const filePath = `uploads/uph/${req.params.url}`
+    const filePath = `/usr/uploads/uph/${req.params.url}`
     await access(filePath)
     const image = await readFile(filePath)
     res.setHeader('Content-Type', 'image/png')
@@ -60,7 +60,7 @@ export async function removeUserPhoto(
       req.params.url,
     ])
 
-    const filePath = `uploads/uph/${req.params.url}`
+    const filePath = `/usr/uploads/uph/${req.params.url}`
 
     await access(filePath)
 

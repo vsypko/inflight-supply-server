@@ -472,7 +472,7 @@ export async function deleteItemImg(
     const result = await db.query(`SELECT img_url FROM ${type} WHERE id=$1`, [
       id,
     ])
-    const filePath = `uploads/itm/${result.rows[0].img_url}`
+    const filePath = `/usr/uploads/itm/${result.rows[0].img_url}`
     await db.query(`UPDATE ${type} SET img_url='' WHERE id=$1`, [id])
     access(filePath)
     unlink(filePath)
