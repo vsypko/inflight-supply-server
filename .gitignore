@@ -1,7 +1,6 @@
 node_modules
-uploads
 *.env.*
 .env
 build
-uploads/itm
-uploads/uph
+uploads/itm/*.*
+uploads/uph/*.*
