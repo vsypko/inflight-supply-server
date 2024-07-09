@@ -246,6 +246,7 @@ export async function insertCompanyItems(
     }
 
     //insert supply/ies ----------------------------------------------------------------------------------------------------
+
     if (req.params.type === 'supplies') {
       const values = data
         .map(
@@ -265,6 +266,7 @@ export async function insertCompanyItems(
     }
 
     //insert places of service ------------------------------------------------------------------------------------
+
     if (req.params.type === 'places') {
       const values = data[0]
       result = await db.query(
@@ -348,7 +350,7 @@ export async function updateCompanyItem(
         const oldImgUrl = result.rows[0]?.img_url
 
         if (oldImgUrl) {
-          const filePath = `uploads/itm/${result.rows[0].img_url}`
+          const filePath = `/usr/uploads/itm/${result.rows[0].img_url}`
           await access(filePath)
           await unlink(filePath)
         }
@@ -396,7 +398,7 @@ export async function deleteCompanyItem(
       )
       const fileName = result.rows[0].img_url
       if (fileName) {
-        const filePath = `uploads/itm/${fileName}`
+        const filePath = `/usr/uploads/itm/${fileName}`
         await access(filePath)
         await unlink(filePath)
       }
@@ -416,7 +418,7 @@ export async function getItemImgUrl(
   next: NextFunction
 ) {
   try {
-    const filePath = `uploads/itm/${req.params.url}`
+    const filePath = `/usr/uploads/itm/${req.params.url}`
     await access(filePath)
     const image = await readFile(filePath)
     res.setHeader('Content-Type', 'image/png')
