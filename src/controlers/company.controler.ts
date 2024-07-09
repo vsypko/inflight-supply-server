@@ -91,7 +91,7 @@ export async function getCompaniesForAirport(
 
     if (type === 'supplier') {
       const result = await db.query(
-        'SELECT * FROM companies c INNER JOIN places p ON c.category=$1 AND c.id=p.company_id AND p.airport_id=$2',
+        'SELECT c.* FROM companies c INNER JOIN places p ON c.category=$1 AND c.id=p.company_id AND p.airport_id=$2',
         [type, airport]
       )
       res.send(result.rows)

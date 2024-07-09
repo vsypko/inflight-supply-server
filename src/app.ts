@@ -13,7 +13,7 @@ const port = Number(process.env.PORT) || 3001
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL1 as string,
+    origin: process.env.CLIENT_URL as string,
     credentials: true,
   })
 )
@@ -25,6 +25,4 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello there!')
 })
 
-app.listen(port, () =>
-  console.log(`[server] running at http://localhost:${port}`)
-)
+app.listen(port, () => console.log(`[server] running on port ${port}`))
